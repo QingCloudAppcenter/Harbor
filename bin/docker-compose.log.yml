@@ -1,0 +1,9 @@
+version: '2'
+services:
+  log:
+    image: vmware/harbor-log:v1.1.1
+    container_name: harbor-log
+    restart: always
+    volumes:
+      - /var/log/harbor/:/var/log/docker/:z
+    network_mode: host

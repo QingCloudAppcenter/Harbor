@@ -1,0 +1,35 @@
+127.0.0.1	localhost
+
+# The following lines are desirable for IPv6 capable hosts
+::1     localhost ip6-localhost ip6-loopback
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+
+{{range $dir := lsdir "/hosts/log_node/"}}{{$ip := printf "/hosts/log_node/%s/ip" $dir}}
+{{getv $ip}} log
+{{else}}
+127.0.0.1 log
+{{end}}
+
+{{range $dir := lsdir "/hosts/db_node/"}}{{$ip := printf "/hosts/db_node/%s/ip" $dir}}
+{{getv $ip}} mysql
+{{else}}
+127.0.0.1 mysql
+{{end}}
+
+{{range $dir := lsdir "/hosts/cache_node/"}}{{$ip := printf "/hosts/cache_node/%s/ip" $dir}}
+{{getv $ip}} redis
+{{else}}
+127.0.0.1 redis
+{{end}}
+
+{{range $dir := lsdir "/hosts/job_node/"}}{{$ip := printf "/hosts/job_node/%s/ip" $dir}}
+{{getv $ip}} job
+{{else}}
+127.0.0.1 job
+{{end}}
+
+127.0.0.1 jobservice
+127.0.0.1 adminserver
+127.0.0.1 ui
+127.0.0.1 registry

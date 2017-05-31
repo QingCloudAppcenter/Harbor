@@ -1,0 +1,7 @@
+[template]
+src = "hosts.tmpl"
+dest = "/etc/hosts"
+keys = [
+  "/",
+]
+reload_cmd = "/opt/harbor/bin/manager.sh restart docker-compose.web.yml"

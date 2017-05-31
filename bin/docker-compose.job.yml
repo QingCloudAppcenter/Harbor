@@ -1,0 +1,89 @@
+version: '2'
+services:
+  registry:
+    image: dockerhub.qingcloud.com/yangjun/docker-registry
+    container_name: registry
+    restart: always
+    volumes:
+      - /data/registry:/storage:z
+      - ./harbor/common/config/registry/:/etc/registry/:z
+    network_mode: host
+    environment:
+      - GODEBUG=netdns=cgo
+    command:
+      ["/usr/local/bin/docker-registry","serve", "/etc/registry/config.yml"]
+    logging:
+      driver: "syslog"
+      options:  
+        syslog-address: "tcp://log:514"
+        tag: "registry"
+  jobservice:
+    image: vmware/harbor-jobservice:v1.1.1
+    container_name: harbor-jobservice
+    env_file:
+      - ./harbor/common/config/jobservice/env
+    restart: always
+    volumes:
+      - /data/job_logs:/var/log/jobs:z
+      - ./harbor/common/config/jobservice/app.conf:/etc/jobservice/app.conf:z
+      - /data/secretkey:/etc/jobservice/key:z
+    network_mode: host
+    depends_on:
+      - ui
+      - adminserver
+    logging:
+      driver: "syslog"
+      options:  
+        syslog-address: "tcp://log:514"
+        tag: "jobservice"
+  adminserver:
+    image: vmware/harbor-adminserver:v1.1.1
+    container_name: harbor-adminserver
+    env_file:
+      - ./harbor/common/config/adminserver/env
+    restart: always
+    volumes:
+      - /data/config/:/etc/adminserver/config/:z
+      - /data/secretkey:/etc/adminserver/key:z
+      - /data/:/data/:z
+    network_mode: host
+    logging:
+      driver: "syslog"
+      options:  
+        syslog-address: "tcp://log:514"
+        tag: "adminserver"
+  ui:
+    image: vmware/harbor-ui:v1.1.1
+    container_name: harbor-ui
+    env_file:
+      - ./harbor/common/config/ui/env
+    restart: always
+    volumes:
+      - ./harbor/common/config/ui/app.conf:/etc/ui/app.conf:z
+      - ./harbor/common/config/ui/private_key.pem:/etc/ui/private_key.pem:z
+      - /data/secretkey:/etc/ui/key:z
+      - /data/ca_download/:/etc/ui/ca/:z
+    network_mode: host
+    depends_on:
+      - adminserver
+      - registry
+    logging:
+      driver: "syslog"
+      options:  
+        syslog-address: "tcp://log:514"
+        tag: "ui"
+  proxy:
+    image: vmware/nginx:1.11.5-patched
+    container_name: nginx
+    restart: always
+    volumes:
+      - ./harbor/common/config/nginx:/etc/nginx:z
+    network_mode: host
+    depends_on:
+      - registry
+      - ui
+    logging:
+      driver: "syslog"
+      options:  
+        syslog-address: "tcp://log:514"
+        tag: "proxy"

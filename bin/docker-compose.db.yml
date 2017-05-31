@@ -1,0 +1,16 @@
+version: '2'
+services:
+  mysql:
+    image: vmware/harbor-db:v1.1.1
+    container_name: harbor-db
+    restart: always
+    volumes:
+      - /data/database:/var/lib/mysql:z
+    network_mode: host
+    env_file:
+      - ./harbor/common/config/db/env
+    logging:
+      driver: "syslog"
+      options:  
+        syslog-address: "tcp://log:514"
+        tag: "mysql"

@@ -1,0 +1,175 @@
+{
+    "name":{{cluster.name}},
+    "description":{{cluster.description}},
+    "vxnet":{{cluster.vxnet}},
+    "nodes":[{
+        "role": "log_node",
+        "container":{
+            "type":"kvm",
+            "zone":"pek3a",
+            "image":"img-qwqrx9we"
+        },
+        "instance_class": {{cluster.log_node.instance_class}},
+        "count":1,
+        "cpu":{{cluster.log_node.cpu}},
+        "memory":{{cluster.log_node.memory}},
+        "volume":{
+            "size":{{cluster.log_node.volume_size}},
+            "mount_point":"/var/log/harbor",
+            "mount_options":"defaults,noatime",
+            "filesystem":"ext4",
+            "class":{{cluster.log_node.volume_class}}
+        },
+        "user_access": true,
+        "services":{
+            "start":{
+                "order": 1,
+                "cmd":"/opt/harbor/bin/manager.sh start /opt/harbor/bin/docker-compose.log.yml"
+            },
+            "stop":{
+                "order":4,
+                "cmd":"/opt/harbor/bin/manager.sh stop /opt/harbor/bin/docker-compose.log.yml"
+            },
+            "restart":{
+                "cmd":"/opt/harbor/bin/manager.sh restart /opt/harbor/bin/docker-compose.log.yml"
+            }
+        }
+    },
+    {
+        "role": "db_node",
+        "container":{
+            "type":"kvm",
+            "zone":"pek3a",
+            "image":"img-qwqrx9we"
+        },
+        "instance_class": {{cluster.db_node.instance_class}},
+        "count":1,
+        "cpu":{{cluster.db_node.cpu}},
+        "memory":{{cluster.db_node.memory}},
+        "volume":{
+            "size":{{cluster.db_node.volume_size}},
+            "mount_point":"/data/database",
+            "mount_options":"defaults,noatime",
+            "filesystem":"ext4",
+            "class":{{cluster.db_node.volume_class}}
+        },
+        "user_access": false,
+        "services":{
+            "start":{
+                "order": 2,
+                "cmd":"/opt/harbor/bin/manager.sh start /opt/harbor/bin/docker-compose.db.yml"
+            },
+            "stop":{
+                "order":3,
+                "cmd":"/opt/harbor/bin/manager.sh stop /opt/harbor/bin/docker-compose.db.yml"
+            },
+            "restart":{
+                "cmd":"/opt/harbor/bin/manager.sh restart /opt/harbor/bin/docker-compose.db.yml"
+            }
+        }
+    },
+    {
+        "role": "cache_node",
+        "container":{
+            "type":"kvm",
+            "zone":"pek3a",
+            "image":"img-qwqrx9we"
+        },
+        "instance_class": {{cluster.cache_node.instance_class}},
+        "count":1,
+        "cpu":{{cluster.cache_node.cpu}},
+        "memory":{{cluster.cache_node.memory}},
+        "user_access": false,
+        "services":{
+            "start":{
+              "order": 2,
+                "cmd":"/opt/harbor/bin/manager.sh start /opt/harbor/bin/docker-compose.redis.yml"
+            },
+            "stop":{
+              "order": 3,
+                "cmd":"/opt/harbor/bin/manager.sh stop /opt/harbor/bin/docker-compose.redis.yml"
+            },
+            "restart":{
+                "cmd":"/opt/harbor/bin/manager.sh restart /opt/harbor/bin/docker-compose.redis.yml"
+            }
+        }
+    },{
+        "role": "job_node",
+        "container":{
+            "type":"kvm",
+            "zone":"pek3a",
+            "image":"img-qwqrx9we"
+        },
+        "instance_class": {{cluster.job_node.instance_class}},
+        "count":{{cluster.job_node.count}},
+        "cpu":{{cluster.job_node.cpu}},
+        "memory":{{cluster.job_node.memory}},
+        "advanced_actions":["scale_horizontal"],
+        "user_access": false,
+        "services":{
+            "start":{
+                "order": 4,
+                "cmd":"/opt/harbor/bin/manager.sh start /opt/harbor/bin/docker-compose.job.yml"
+            },
+            "stop":{
+                "order": 2,
+                "cmd":"/opt/harbor/bin/manager.sh stop /opt/harbor/bin/docker-compose.job.yml"
+            },
+            "restart":{
+                "order": 2,
+                "cmd":"/opt/harbor/bin/manager.sh restart /opt/harbor/bin/docker-compose.job.yml"
+            }
+        },
+        "env":{
+            "HARBOR_HOST":{{env.HARBOR_HOST}},
+            "REGISTRY_READONLY":{{env.REGISTRY_READONLY}},
+            "QS_ACCESS":{{env.QS_ACCESS}},
+            "QS_SECRET":{{env.QS_SECRET}},
+            "QS_BUCKET":{{env.QS_BUCKET}},
+            "QS_ZONE":{{env.QS_ZONE}},
+            "QS_ROOT_DIRECTORY":{{env.QS_ROOT_DIRECTORY}}
+        }
+    },{
+        "role": "web_node",
+        "container":{
+            "type":"kvm",
+            "zone":"pek3a",
+            "image":"img-qwqrx9we"
+        },
+        "instance_class": {{cluster.web_node.instance_class}},
+        "count":{{cluster.web_node.count}},
+        "cpu":{{cluster.web_node.cpu}},
+        "memory":{{cluster.web_node.memory}},
+        "loadbalancer": {{cluster.web_node.loadbalancer}},
+        "advanced_actions":["scale_horizontal"],
+        "user_access": false,
+        "services":{
+            "start":{
+                "order": 3,
+                "cmd":"/opt/harbor/bin/manager.sh start /opt/harbor/bin/docker-compose.web.yml"
+            },
+            "stop":{
+                "order": 1,
+                "cmd":"/opt/harbor/bin/manager.sh stop /opt/harbor/bin/docker-compose.web.yml"
+            },
+            "restart":{
+                "cmd":"/opt/harbor/bin/manager.sh restart /opt/harbor/bin/docker-compose.web.yml"
+            },
+            "cleanImage":{
+              "type":"custom",
+              "cmd":"/opt/harbor/bin/cleanImage.sh",
+              "nodes_to_execute_on": 1,
+              "timeout": 600
+            }
+        },
+        "env":{
+            "HARBOR_HOST":{{env.HARBOR_HOST}},
+            "REGISTRY_READONLY":{{env.REGISTRY_READONLY}},
+            "QS_ACCESS":{{env.QS_ACCESS}},
+            "QS_SECRET":{{env.QS_SECRET}},
+            "QS_BUCKET":{{env.QS_BUCKET}},
+            "QS_ZONE":{{env.QS_ZONE}},
+            "QS_ROOT_DIRECTORY":{{env.QS_ROOT_DIRECTORY}}
+        }
+    }]
+}

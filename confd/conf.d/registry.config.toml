@@ -1,0 +1,7 @@
+[template]
+src = "registry.config.yml.tmpl"
+dest = "/opt/harbor/bin/harbor/common/config/registry/config.yml"
+keys = [
+  "/",
+]
+reload_cmd = "/opt/harbor/bin/manager.sh restart docker-compose.web.yml"

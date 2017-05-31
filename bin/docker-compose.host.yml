@@ -1,0 +1,120 @@
+version: '2'
+services:
+  log:
+    image: vmware/harbor-log:v1.1.1
+    container_name: harbor-log 
+    restart: always
+    volumes:
+      - /var/log/harbor/:/var/log/docker/:z
+    network_mode: host
+  registry:
+    image: vmware/registry:photon-2.6.0
+    container_name: registry
+    restart: always
+    volumes:
+      - /data/registry:/storage:z
+      - ./harbor/common/config/registry/:/etc/registry/:z
+    network_mode: host
+    environment:
+      - GODEBUG=netdns=cgo
+    command:
+      ["serve", "/etc/registry/config.yml"]
+    depends_on:
+      - log
+    logging:
+      driver: "syslog"
+      options:  
+        syslog-address: "tcp://127.0.0.1:514"
+        tag: "registry"
+  mysql:
+    image: vmware/harbor-db:v1.1.1
+    container_name: harbor-db
+    restart: always
+    volumes:
+      - /data/database:/var/lib/mysql:z
+    network_mode: host
+    env_file:
+      - ./harbor/common/config/db/env
+    depends_on:
+      - log
+    logging:
+      driver: "syslog"
+      options:  
+        syslog-address: "tcp://127.0.0.1:514"
+        tag: "mysql"
+  adminserver:
+    image: vmware/harbor-adminserver:v1.1.1
+    container_name: harbor-adminserver
+    env_file:
+      - ./harbor/common/config/adminserver/env
+    restart: always
+    volumes:
+      - /data/config/:/etc/adminserver/config/:z
+      - /data/secretkey:/etc/adminserver/key:z
+      - /data/:/data/:z
+    network_mode: host
+    depends_on:
+      - log
+    logging:
+      driver: "syslog"
+      options:  
+        syslog-address: "tcp://127.0.0.1:514"
+        tag: "adminserver"
+  ui:
+    image: vmware/harbor-ui:v1.1.1
+    container_name: harbor-ui
+    env_file:
+      - ./harbor/common/config/ui/env
+    restart: always
+    volumes:
+      - ./harbor/common/config/ui/app.conf:/etc/ui/app.conf:z
+      - ./harbor/common/config/ui/private_key.pem:/etc/ui/private_key.pem:z
+      - /data/secretkey:/etc/ui/key:z
+      - /data/ca_download/:/etc/ui/ca/:z
+    network_mode: host
+    depends_on:
+      - log
+      - adminserver
+      - registry
+    logging:
+      driver: "syslog"
+      options:  
+        syslog-address: "tcp://127.0.0.1:514"
+        tag: "ui"
+  jobservice:
+    image: vmware/harbor-jobservice:v1.1.1
+    container_name: harbor-jobservice
+    env_file:
+      - ./harbor/common/config/jobservice/env
+    restart: always
+    volumes:
+      - /data/job_logs:/var/log/jobs:z
+      - ./harbor/common/config/jobservice/app.conf:/etc/jobservice/app.conf:z
+      - /data/secretkey:/etc/jobservice/key:z
+    network_mode: host
+    depends_on:
+      - ui
+      - adminserver
+    logging:
+      driver: "syslog"
+      options:  
+        syslog-address: "tcp://127.0.0.1:514"
+        tag: "jobservice"
+  proxy:
+    image: vmware/nginx:1.11.5-patched
+    container_name: nginx
+    restart: always
+    volumes:
+      - ./harbor/common/config/nginx:/etc/nginx:z
+    network_mode: host
+    depends_on:
+      - mysql
+      - registry
+      - ui
+      - log
+    logging:
+      driver: "syslog"
+      options:  
+        syslog-address: "tcp://127.0.0.1:514"
+        tag: "proxy"
+
