@@ -293,7 +293,7 @@
             	"label": "QS_ZONE",
             	"description": "Provide the zone of bucket to use",
             	"type": "string",
-              "changeable":true,
+              "changeable":false,
 							"default": "pek3a",
             	"required": "no"
         			},

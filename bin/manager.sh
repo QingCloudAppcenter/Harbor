@@ -36,6 +36,7 @@ stop() {
 
 start() {
   run /usr/local/bin/docker-compose -f $1 up -d
+  sleep 1
 }
 
 restart() {
