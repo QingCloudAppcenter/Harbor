@@ -36,14 +36,14 @@ stop() {
 
 start() {
   run /usr/local/bin/docker-compose -f $1 up -d
-  sleep 1
   WAIT_MAX=10
   WAIT_TIMES=0
   READY=0
   CONTAINERS=`docker ps -q`
   until [ $WAIT_TIMES -gt $WAIT_MAX ] || [ $READY -eq 1 ]
   do
-    READY=1
+    sleep 1
+    let WAIT_TIMES+=1
     for C in "${CONTAINERS[@]}"
     do
       echo "check $C container state is `docker inspect -f {{.State.Running}} $C`"
@@ -52,9 +52,8 @@ start() {
         READY=0
         break
       fi
+      READY=1
     done
-    sleep 1
-    let WAIT_TIMES+=1
   done
   
   # exit 1 when start timeout
