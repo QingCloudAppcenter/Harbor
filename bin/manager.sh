@@ -39,15 +39,16 @@ start() {
   WAIT_MAX=10
   WAIT_TIMES=0
   READY=0
-  CONTAINERS=`docker ps -q`
-  until [ $WAIT_TIMES -gt $WAIT_MAX ] || [ $READY -eq 1 ]
+  CONTAINERS=`docker ps -qa`
+  until [ $WAIT_TIMES -ge $WAIT_MAX ] || [ $READY -eq 1 ]
   do
     sleep 1
     let WAIT_TIMES+=1
     for C in "${CONTAINERS[@]}"
     do
-      echo "check $C container state is `docker inspect -f {{.State.Running}} $C`"
-      if [ `docker inspect -f {{.State.Running}} $C` == "false" ]
+      STATE=`docker inspect -f {{.State.Running}} $C`
+      echo "check $C container state is $STATE"
+      if [ "$STATE" == "false" ]
       then
         READY=0
         break
@@ -57,7 +58,30 @@ start() {
   done
   
   # exit 1 when start timeout
-  if [ $WAIT_TIMES -gt $WAIT_MAX ]
+  if [ $WAIT_TIMES -ge $WAIT_MAX ]
+  then
+    exit 1
+  fi
+  
+  WAIT_TIMES=0
+  for C in "${CONTAINERS[@]}"
+  do
+    PORTS=`docker inspect -f '{{range $k,$v:=.HostConfig.PortBindings}}{{$k}}{{end}}' $C`
+    for P in "${PORTS[@]}"
+    do
+      RET_CODE=`nc -zv -w5 0.0.0.0 ${P%/*} | echo $?`
+      until [ $RET_CODE -eq 0 ] || [ $WAIT_TIMES -ge $WAIT_MAX ]
+      do
+        echo "check ${P}"
+        sleep 1
+        let WAIT_TIMES+=1
+        RET_CODE=`nc -zv -w5 0.0.0.0 ${P%/*} | echo $?`
+      done
+    done
+  done
+  
+  # exit 1 when start timeout
+  if [ $WAIT_TIMES -ge $WAIT_MAX ]
   then
     exit 1
   fi

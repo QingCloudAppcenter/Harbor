@@ -7,6 +7,8 @@ services:
     volumes:
       - /data/database:/var/lib/mysql:z
     network_mode: host
+    ports:
+      - 3306
     env_file:
       - ./harbor/common/config/db/env
     logging:

@@ -7,3 +7,5 @@ services:
     volumes:
       - /var/log/harbor/:/var/log/docker/:z
     network_mode: host
+    ports:
+      - 514

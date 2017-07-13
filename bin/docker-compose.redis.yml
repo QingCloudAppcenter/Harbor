@@ -5,6 +5,8 @@ services:
     container_name: registry-redis
     restart: always
     network_mode: host
+    ports:
+      - 6379
     logging:
       driver: "syslog"
       options:  
