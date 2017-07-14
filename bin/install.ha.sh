@@ -324,9 +324,9 @@ function configure_redis {
       maxidle: 16
       maxactive: 64
       idletimeout: 300s
-    dialtimeout: 10ms
-    readtimeout: 10ms
-    writetimeout: 10ms" >> ${harbor_dir}/common/config/registry/config.yml
+      dialtimeout: 500ms
+      readtimeout: 500ms
+      writetimeout: 500ms" >> ${harbor_dir}/common/config/registry/config.yml
   sed -i 's#      layerinfo:[[:space:]]*[a-z]*#      layerinfo: redis#g' ${harbor_dir}/common/config/registry/config.yml
   sed -i 's#      blobdescriptor:[[:space:]]*[a-z]*#      blobdescriptor: redis#g' ${harbor_dir}/common/config/registry/config.yml
 }
