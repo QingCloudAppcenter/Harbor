@@ -58,6 +58,7 @@
     "QS_SECRET":"Secret_Access_Key",
     "QS_BUCKET":"QingStor Bucket",
     "QS_ZONE":"QingStor Zone",
+    "QS_URL":"Address of QingStor",
     "QS_ROOT_DIRECTORY":"Root Direcotry",
     "cleanImage":"Clean Image"
 }

@@ -293,8 +293,16 @@
             	"label": "QS_ZONE",
             	"description": "Provide the zone of bucket to use",
             	"type": "string",
-              "changeable":false,
+              "changeable":true,
 							"default": "pek3a",
+            	"required": "no"
+        			},{
+            	"key": "QS_URL",
+            	"label": "QS_URL",
+            	"description": "Provide the Address of QingStor",
+            	"type": "string",
+              "changeable":true,
+							"default": "https://qingstor.com",
             	"required": "no"
         			},
               {
