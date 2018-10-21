@@ -191,6 +191,80 @@
         "required": "yes"
       }]
     }, {
+      "key": "storage_node",
+      "description": "",
+      "label": "storage_node",
+      "type": "array",
+      "properties": [{
+        "key": "cpu",
+        "label": "CPU",
+        "description": "CPUs of each node",
+        "type": "integer",
+        "default": 2,
+        "range": [
+          1,
+          2,
+          4,
+          8
+        ],
+        "required": "yes"
+      }, {
+        "key": "memory",
+        "label": "Memory",
+        "description": "Memory of each node",
+        "type": "integer",
+        "default": 1024,
+        "range": [
+          1024,
+          2048,
+          4096,
+          8192
+        ],
+        "required": "yes"
+      }, {
+        "key": "count",
+        "label": "Count",
+        "description": "If QingStor will be used as Harbor's backend, then DO NOT create this node; otherwise please create one; default to 0 meaning not to create",
+        "type": "integer",
+        "default": 0,
+        "max": 1,
+        "min": 0,
+        "changeable": false,
+        "required": "yes"
+      }, {
+        "key": "instance_class",
+        "label": "Instance Class",
+        "description": "The instance type for the cluster to run, such as high performance, high performance plus",
+        "type": "integer",
+        "default": 0,
+        "range": [
+          0,
+          1
+        ],
+        "required": "yes"
+      }, {
+        "key": "volume_class",
+        "label": "Volume Class",
+        "description": "The volume type for each instance,such as high performance,high performance plus",
+        "type": "integer",
+        "default": 0,
+        "range": [
+          0,
+          3
+        ],
+        "required": "yes"
+      }, {
+        "key": "volume_size",
+        "label": "Volume Size",
+        "description": "The volume size for each instance",
+        "type": "integer",
+        "default": 50,
+        "min": 10,
+        "max": 1000,
+        "step": 10,
+        "required": "yes"
+      }]
+    }, {
       "key": "job_node",
       "description": "",
       "label": "job_node",
@@ -323,34 +397,34 @@
     }, {
       "key": "QS_ACCESS",
       "label": "QS_ACCESS",
-      "description": "Provide the accesskey to connect QingStor for storing Image data",
+      "description": "Provide the accesskey to connect QingStor for storing Image data; keep untouched if not using QingStor",
       "type": "string",
       "changeable": true,
-      "default": "",
+      "default": "accesskey",
       "required": "yes"
     }, {
       "key": "QS_SECRET",
       "label": "QS_SECRET",
-      "description": "Provide the secretkey to connect QingStor for storing Image data",
+      "description": "Provide the secretkey to connect QingStor for storing Image data; keep untouched if not using QingStor",
       "type": "password",
       "changeable": true,
-      "default": "",
+      "default": "secretkey",
       "required": "yes"
     }, {
       "key": "QS_BUCKET",
       "label": "QS_BUCKET",
-      "description": "Provide the bucket name to use",
+      "description": "Provide the bucket name to use; keep untouched if not using QingStor",
       "type": "string",
       "changeable": false,
-      "default": "",
+      "default": "harbor",
       "required": "yes"
     }, {
       "key": "QS_ROOT_DIRECTORY",
       "label": "QS_ROOT_DIRECTORY",
-      "description": "The root direcotry or prefix for Harbor image storage",
+      "description": "The root direcotry or prefix for Harbor image storage; keep untouched if not using QingStor",
       "type": "string",
       "changeable": false,
-      "default": "",
+      "default": "registry-root",
       "required": "yes"
     }, {
       "key": "QS_ZONE",

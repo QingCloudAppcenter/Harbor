@@ -5,12 +5,22 @@ log:
     service: registry
 
 storage:
+{{- if gt (len (ls "/hosts/storage_node")) 0 }}
+    s3:
+        accesskey: admin
+        secretkey: password
+        bucket: harbor
+        region: default
+        regionendpoint: http://{{ range getvs "/hosts/storage_node/*/ip" }}{{ . }}{{ end }}
+        rootdirectory: registry-root
+{{- else }}
     qs:
         accesskey: {{getv "/env/QS_ACCESS"}}
         secretkey: {{getv "/env/QS_SECRET"}}
         bucket: {{getv "/env/QS_BUCKET"}}
         zone: {{getv "/env/QS_ZONE"}}
         rootdirectory: {{getv "/env/QS_ROOT_DIRECTORY" "registry"}}
+{{- end }}
     cache:
         layerinfo: redis
     maintenance:
@@ -49,3 +59,4 @@ redis:
     dialtimeout: 10ms
     readtimeout: 10ms
     writetimeout: 10ms
+

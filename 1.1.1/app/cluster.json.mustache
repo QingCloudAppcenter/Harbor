@@ -1,14 +1,15 @@
 {
   "name": {{cluster.name}},
   "description": {{cluster.description}},
-  "upgrade_policy": ["appv-sn0liyi6","appv-9we6rg37","appv-32b0fb93","appv-kilcnvix"],
+  "upgrade_policy": [ "appv-t2kn8lrz", "appv-sn0liyi6", "appv-9we6rg37", "appv-32b0fb93", "appv-kilcnvix" ],
+  "upgrade_roles": { "add": [ "storage_node" ] },
   "vxnet": {{cluster.vxnet}},
   "nodes": [{
     "role": "log_node",
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-hpp0n6xj"
+      "image": "img-mmjbwk2g"
     },
     "instance_class": {{cluster.log_node.instance_class}},
     "count": 1,
@@ -35,13 +36,47 @@
         "cmd": "/opt/harbor/bin/manager.sh restart /opt/harbor/bin/docker-compose.log.yml"
       }
     }
-  },
-  {
+  }, {
+    "role": "storage_node",
+    "container": {
+      "type": "kvm",
+      "zone": "pek3a",
+      "image": "img-mmjbwk2g"
+    },
+    "instance_class": {{cluster.storage_node.instance_class}},
+    "count": {{cluster.storage_node.count}},
+    "cpu": {{cluster.storage_node.cpu}},
+    "memory": {{cluster.storage_node.memory}},
+    "volume": {
+      "size": {{cluster.storage_node.volume_size}},
+      "mount_point": "/data/storage",
+      "mount_options": "defaults,noatime",
+      "filesystem": "ext4",
+      "class": {{cluster.storage_node.volume_class}}
+    },
+    "user_access": false,
+    "services": {
+      "init": {
+        "cmd": "/opt/harbor/bin/app.sh storage init"
+      },
+      "start": {
+        "order": 2,
+        "cmd": "/opt/harbor/bin/app.sh storage start"
+      },
+      "stop": {
+        "order": 3,
+        "cmd": "/opt/harbor/bin/app.sh storage stop"
+      },
+      "restart": {
+        "cmd": "/opt/harbor/bin/app.sh storage restart"
+      }
+    }
+  }, {
     "role": "db_node",
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-hpp0n6xj"
+      "image": "img-mmjbwk2g"
     },
     "instance_class": {{cluster.db_node.instance_class}},
     "count": 1,
@@ -74,7 +109,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-hpp0n6xj"
+      "image": "img-mmjbwk2g"
     },
     "instance_class": {{cluster.cache_node.instance_class}},
     "count": 1,
@@ -99,7 +134,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-hpp0n6xj"
+      "image": "img-mmjbwk2g"
     },
     "instance_class": {{cluster.job_node.instance_class}},
     "count": {{cluster.job_node.count}},
@@ -128,6 +163,7 @@
       "QS_SECRET": {{env.QS_SECRET}},
       "QS_BUCKET": {{env.QS_BUCKET}},
       "QS_ZONE": {{env.QS_ZONE}},
+      "QS_URL": {{env.QS_URL}},
       "QS_ROOT_DIRECTORY": {{env.QS_ROOT_DIRECTORY}}
     }
   },{
@@ -135,7 +171,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-hpp0n6xj"
+      "image": "img-mmjbwk2g"
     },
     "instance_class": {{cluster.web_node.instance_class}},
     "count": {{cluster.web_node.count}},
