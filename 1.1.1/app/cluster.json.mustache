@@ -9,7 +9,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-mmjbwk2g"
+      "image": "img-aqakypwt"
     },
     "instance_class": {{cluster.log_node.instance_class}},
     "count": 1,
@@ -41,7 +41,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-mmjbwk2g"
+      "image": "img-aqakypwt"
     },
     "instance_class": {{cluster.storage_node.instance_class}},
     "count": {{cluster.storage_node.count}},
@@ -55,10 +55,10 @@
       "class": {{cluster.storage_node.volume_class}}
     },
     "user_access": false,
+    "custom_metadata": {
+      "cmd": "/opt/harbor/bin/app.sh storage generateToken"
+    },
     "services": {
-      "init": {
-        "cmd": "/opt/harbor/bin/app.sh storage init"
-      },
       "start": {
         "order": 2,
         "cmd": "/opt/harbor/bin/app.sh storage start"
@@ -76,7 +76,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-mmjbwk2g"
+      "image": "img-aqakypwt"
     },
     "instance_class": {{cluster.db_node.instance_class}},
     "count": 1,
@@ -109,7 +109,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-mmjbwk2g"
+      "image": "img-aqakypwt"
     },
     "instance_class": {{cluster.cache_node.instance_class}},
     "count": 1,
@@ -134,7 +134,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-mmjbwk2g"
+      "image": "img-aqakypwt"
     },
     "instance_class": {{cluster.job_node.instance_class}},
     "count": {{cluster.job_node.count}},
@@ -171,7 +171,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-mmjbwk2g"
+      "image": "img-aqakypwt"
     },
     "instance_class": {{cluster.web_node.instance_class}},
     "count": {{cluster.web_node.count}},

@@ -6,13 +6,16 @@ log:
 
 storage:
 {{- if gt (len (ls "/hosts/storage_node")) 0 }}
+{{- range getvs "/hosts/storage_node/*/token" }}
+{{- $token := json . }}
     s3:
-        accesskey: admin
-        secretkey: password
+        accesskey: {{ $token.accessKey }}
+        secretkey: {{ $token.secretKey }}
         bucket: harbor
         region: default
         regionendpoint: http://{{ range getvs "/hosts/storage_node/*/ip" }}{{ . }}{{ end }}
         rootdirectory: registry-root
+{{- end }}
 {{- else }}
     qs:
         accesskey: {{getv "/env/QS_ACCESS"}}
