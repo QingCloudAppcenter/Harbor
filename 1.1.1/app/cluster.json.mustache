@@ -9,7 +9,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-p3ekx81u"
+      "image": "img-57d2wld3"
     },
     "instance_class": {{cluster.log_node.instance_class}},
     "count": 1,
@@ -41,7 +41,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-p3ekx81u"
+      "image": "img-57d2wld3"
     },
     "instance_class": {{cluster.storage_node.instance_class}},
     "count": {{cluster.storage_node.count}},
@@ -49,34 +49,44 @@
     "memory": {{cluster.storage_node.memory}},
     "volume": {
       "size": {{cluster.storage_node.volume_size}},
-      "mount_point": "/data/storage",
+      "mount_point": "/data/registry",
       "mount_options": "defaults,noatime",
       "filesystem": "ext4",
       "class": {{cluster.storage_node.volume_class}}
     },
     "user_access": false,
-    "custom_metadata": {
-      "cmd": "/opt/harbor/bin/app.sh storage generateToken"
-    },
     "services": {
+      "init": {
+        "order": 1,
+        "cmd": "/opt/harborapp/bin/app.sh init storage"
+      },
       "start": {
-        "order": 2,
-        "cmd": "/opt/harbor/bin/app.sh storage start"
+        "order": 1,
+        "cmd": "/opt/harborapp/bin/app.sh reset storage"
       },
       "stop": {
-        "order": 3,
-        "cmd": "/opt/harbor/bin/app.sh storage stop"
+        "order": 4,
+        "cmd": "/opt/harborapp/bin/app.sh stop storage"
       },
       "restart": {
-        "cmd": "/opt/harbor/bin/app.sh storage restart"
+        "cmd": "/opt/harborapp/bin/app.sh reset storage"
       }
+    },
+    "health_check": {
+      "enable": true,
+      "interval_sec": 60,
+      "timeout_sec": 10,
+      "action_timeout_sec": 30,
+      "healthy_threshold": 2,
+      "unhealthy_threshold": 2,
+      "check_cmd": "/opt/harborapp/bin/app.sh check storage"
     }
   }, {
     "role": "db_node",
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-p3ekx81u"
+      "image": "img-57d2wld3"
     },
     "instance_class": {{cluster.db_node.instance_class}},
     "count": 1,
@@ -109,7 +119,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-p3ekx81u"
+      "image": "img-57d2wld3"
     },
     "instance_class": {{cluster.cache_node.instance_class}},
     "count": 1,
@@ -134,7 +144,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-p3ekx81u"
+      "image": "img-57d2wld3"
     },
     "instance_class": {{cluster.job_node.instance_class}},
     "count": {{cluster.job_node.count}},
@@ -143,9 +153,13 @@
     "advanced_actions": ["scale_horizontal"],
     "user_access": false,
     "services": {
+      "init": {
+        "order": 4,
+        "cmd": "/opt/harborapp/bin/app.sh init job"
+      },
       "start": {
         "order": 4,
-        "cmd": "/opt/harbor/bin/manager.sh start /opt/harbor/bin/docker-compose.job.yml"
+        "cmd": "/opt/harborapp/bin/app.sh start job"
       },
       "stop": {
         "order": 2,
@@ -153,7 +167,7 @@
       },
       "restart": {
         "order": 2,
-        "cmd": "/opt/harbor/bin/manager.sh restart /opt/harbor/bin/docker-compose.job.yml"
+        "cmd": "/opt/harborapp/bin/app.sh restart job"
       }
     },
     "env": {
@@ -171,7 +185,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-p3ekx81u"
+      "image": "img-57d2wld3"
     },
     "instance_class": {{cluster.web_node.instance_class}},
     "count": {{cluster.web_node.count}},
@@ -181,16 +195,20 @@
     "advanced_actions": ["scale_horizontal"],
     "user_access": false,
     "services": {
+      "init": {
+        "order": 3,
+        "cmd": "/opt/harborapp/bin/app.sh init web"
+      },
       "start": {
         "order": 3,
-        "cmd": "/opt/harbor/bin/manager.sh start /opt/harbor/bin/docker-compose.web.yml"
+        "cmd": "/opt/harborapp/bin/app.sh start web"
       },
       "stop": {
         "order": 1,
         "cmd": "/opt/harbor/bin/manager.sh stop /opt/harbor/bin/docker-compose.web.yml"
       },
       "restart": {
-        "cmd": "/opt/harbor/bin/manager.sh restart /opt/harbor/bin/docker-compose.web.yml"
+        "cmd": "/opt/harborapp/bin/app.sh restart web"
       },
       "cleanImage": {
         "type": "custom",

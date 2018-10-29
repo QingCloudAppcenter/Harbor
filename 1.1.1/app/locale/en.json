@@ -50,7 +50,6 @@
   "The password of Database MySQL":"Password of Harbor Database MySQL",
   "REGISTRY_READONLY":"Readonly",
   "Turn on readonly mode,only allow pull action":"Turn on readonly mode,only allow pull action,use it when GC",
-  "The address of harbor service":"The address of harbor service,",
   "QS_ACCESS":"Access_Key_ID",
   "QS_SECRET":"Secret_Access_Key",
   "QS_BUCKET":"QingStor Bucket",

@@ -6,16 +6,8 @@ log:
 
 storage:
 {{- if gt (len (ls "/hosts/storage_node")) 0 }}
-{{- range getvs "/hosts/storage_node/*/token" }}
-{{- $token := json . }}
-    s3:
-        accesskey: {{ $token.accessKey }}
-        secretkey: {{ $token.secretKey }}
-        bucket: harbor
-        region: default
-        regionendpoint: http://{{ range getvs "/hosts/storage_node/*/ip" }}{{ . }}{{ end }}
-        rootdirectory: registry-root
-{{- end }}
+    filesystem:
+        rootdirectory: /storage
 {{- else }}
     qs:
         accesskey: {{getv "/env/QS_ACCESS"}}
@@ -62,4 +54,3 @@ redis:
     dialtimeout: 10ms
     readtimeout: 10ms
     writetimeout: 10ms
-

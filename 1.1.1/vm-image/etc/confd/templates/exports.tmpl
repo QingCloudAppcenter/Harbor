@@ -1,0 +1,1 @@
+/registry	{{ range ls "/hosts" | filter "(web|job)_node" }}{{ range getvs (printf "/hosts/%s/*/ip" .) }}{{ . }}(rw,sync,no_subtree_check) {{ end }}{{ end }}

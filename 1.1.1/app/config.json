@@ -389,10 +389,11 @@
     "properties": [{
       "key": "HARBOR_HOST",
       "label": "HARBOR_HOST",
-      "description": "The address of harbor service",
+      "description": "The address of harbor service, e.g. https://harbor.example.com (notice not to end with slash '/')",
       "type": "string",
       "changeable": true,
       "default": "http://127.0.0.1",
+      "pattern": "^https?://[^:/]+(:[0-9]+)?$",
       "required": "yes"
     }, {
       "key": "QS_ACCESS",

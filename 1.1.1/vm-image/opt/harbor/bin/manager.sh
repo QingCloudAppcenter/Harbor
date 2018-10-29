@@ -21,12 +21,12 @@ then
   exit 1
 fi
 
-function fail {
+fail() {
   echo $1 >&2
   exit 1
 }
 
-function retry {
+retry() {
   local n=0
   local max=10
   local delay=1

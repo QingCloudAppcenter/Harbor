@@ -55,7 +55,7 @@
   "The password of Database MySQL":"Harbor 数据库 MySQL 的密码",
   "REGISTRY_READONLY":"只读",
   "Turn on readonly mode,only allow pull action":"只允许 pull 操作，请在进行仓库清理 GC 时使用",
-  "The address of harbor service":"访问 Harbor 服务的地址，与负载均衡器前端保持一致",
+  "The address of harbor service, e.g. https://harbor.example.com (notice not to end with slash '/')":"访问 Harbor 服务的地址，与负载均衡器前端保持一致，示例：https://harbor.example.com （注意不要以斜线 '/' 结尾）",
   "QS_ACCESS":"Access_Key_ID",
   "QS_SECRET":"Secret_Access_Key",
   "QS_BUCKET":"QingStor Bucket 桶",
