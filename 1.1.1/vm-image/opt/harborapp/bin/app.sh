@@ -17,6 +17,31 @@ ensureRegistryMounted() {
   fi
 }
 
+# Ensure the same command runs only once at a time.
+runSingleton() {
+  lockFile=/tmp/harborapp-$2-$3.lock
+  i=0
+  max=25
+  while [ $i -lt $max ]; do
+    mkdir $lockFile && break || {
+      sleep 1
+      ((i++))
+    }
+  done
+
+  if [ $i -ge $max ]; then
+    myPid=$$
+    stalePid=`ps -df | grep "$1 $2 $3" | grep -v $myPid | grep -v grep | awk '{print $2}'`
+    echo Killing stale process [pid=$stalePid].
+    [ -z "$stalePid" ] || kill -9 $stalePid
+    mv $lockFile $lockFile.deleteme && rm -rf $lockFile.deleteme
+    mkdir $lockFile || exit 1
+  fi
+
+  "$2${3^}"
+  mv $lockFile $lockFile.deleteme && rm -rf $lockFile.deleteme
+}
+
 # ======== Storage Node ======== #
 nfsDockerVersion=1.2.0
 serverMountPath=/data/registry
@@ -76,4 +101,5 @@ restartJob() {
 }
 
 # Start executing.
-"$1${2^}"
+me=`basename "$0"`
+runSingleton $me $1 $2
