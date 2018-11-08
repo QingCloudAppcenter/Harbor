@@ -260,7 +260,6 @@
         "type": "integer",
         "default": 50,
         "min": 10,
-        "max": 1000,
         "step": 10,
         "required": "yes"
       }]
@@ -412,6 +411,14 @@
       "default": "secretkey",
       "required": "yes"
     }, {
+      "key": "QS_ZONE",
+      "label": "QS_ZONE",
+      "description": "Provide the zone of bucket to use",
+      "type": "string",
+      "changeable": true,
+      "default": "pek3a",
+      "required": "yes"
+    }, {
       "key": "QS_BUCKET",
       "label": "QS_BUCKET",
       "description": "Provide the bucket name to use; keep untouched if not using QingStor",
@@ -427,14 +434,6 @@
       "changeable": false,
       "default": "registry-root",
       "required": "yes"
-    }, {
-      "key": "QS_ZONE",
-      "label": "QS_ZONE",
-      "description": "Provide the zone of bucket to use",
-      "type": "string",
-      "changeable": true,
-      "default": "pek3a",
-      "required": "no"
     }, {
       "key": "QS_URL",
       "label": "QS_URL",
