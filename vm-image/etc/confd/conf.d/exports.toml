@@ -1,0 +1,8 @@
+[template]
+src = "exports.tmpl"
+dest = "/opt/harborapp/conf/storage/nfs/exports"
+keys = [
+  "/",
+]
+
+reload_cmd = "/opt/harborapp/bin/app.sh reset storage"

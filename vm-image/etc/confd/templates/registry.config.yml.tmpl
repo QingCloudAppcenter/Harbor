@@ -5,12 +5,17 @@ log:
     service: registry
 
 storage:
+{{- if gt (len (ls "/hosts/storage_node")) 0 }}
+    filesystem:
+        rootdirectory: /storage
+{{- else }}
     qs:
         accesskey: {{getv "/env/QS_ACCESS"}}
         secretkey: {{getv "/env/QS_SECRET"}}
         bucket: {{getv "/env/QS_BUCKET"}}
         zone: {{getv "/env/QS_ZONE"}}
         rootdirectory: {{getv "/env/QS_ROOT_DIRECTORY" "registry"}}
+{{- end }}
     cache:
         layerinfo: redis
     maintenance:

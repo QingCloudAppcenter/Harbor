@@ -21,6 +21,28 @@ then
   exit 1
 fi
 
+fail() {
+  echo $1 >&2
+  exit 1
+}
+
+retry() {
+  local n=0
+  local max=10
+  local delay=1
+  while true; do
+    "$@" && break || {
+      if [[ $n -lt $max ]]; then
+        ((n++))
+        echo "Command failed. Attempted $n/$max:"
+        sleep $delay
+      else
+        fail "The command has failed after $n attempts."
+      fi
+    }
+  done
+}
+
 setEndPoint() {
   echo "Set endpoint ${EXT_ENDPOINT}"
   sed "s#EXT_ENDPOINT=.*#EXT_ENDPOINT=${EXT_ENDPOINT}#" -i /opt/harbor/bin/harbor/common/config/adminserver/env
@@ -39,6 +61,7 @@ start() {
   WAIT_MAX=10
   WAIT_TIMES=0
   READY=0
+  retry [ -n "$(docker ps -qa)" ]
   CONTAINERS=`docker ps -qa`
   until [ $WAIT_TIMES -ge $WAIT_MAX ] || [ $READY -eq 1 ]
   do
@@ -63,29 +86,10 @@ start() {
     exit 1
   fi
 
-  WAIT_TIMES=0
-  for C in "${CONTAINERS[@]}"
-  do
-    PORTS=`docker inspect -f '{{range $k,$v:=.HostConfig.PortBindings}}{{$k}}{{end}}' $C
-`
-    for P in "${PORTS[@]}"
-    do
-      RET_CODE=`nc -zv -w5 0.0.0.0 ${P%/*} | echo $?`
-      until [ $RET_CODE -eq 0 ] || [ $WAIT_TIMES -ge $WAIT_MAX ]
-      do
-        echo "check ${P}"
-        sleep 1
-        let WAIT_TIMES+=1
-        RET_CODE=`nc -zv -w5 0.0.0.0 ${P%/*} | echo $?`
-      done
-    done
+  PORTS=`docker inspect -f '{{range $k,$v:=.HostConfig.PortBindings}}{{$k}}{{end}}' $(docker ps -q)`
+  for P in ${PORTS[@]}; do
+    retry nc -zv -w5 0.0.0.0 ${P%/*}
   done
-
-  # exit 1 when start timeout
-  if [ $WAIT_TIMES -ge $WAIT_MAX ]
-  then
-    exit 1
-  fi
 }
 
 restart() {
