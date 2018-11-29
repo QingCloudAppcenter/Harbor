@@ -227,8 +227,10 @@
         "description": "If QingStor will be used as Harbor's backend, then DO NOT create this node; otherwise please create one; default to 0 meaning not to create",
         "type": "integer",
         "default": 0,
-        "max": 1,
-        "min": 0,
+        "range": [
+          0,
+          1
+        ],
         "changeable": false,
         "required": "yes"
       }, {
@@ -301,8 +303,10 @@
         "description": "Number of nodes for replica cluster to create",
         "type": "integer",
         "default": 0,
-        "max": 1,
-        "min": 0,
+        "range": [
+          0,
+          1
+        ],
         "required": "yes"
       }, {
         "key": "instance_class",
