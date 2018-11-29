@@ -436,8 +436,8 @@
       "description": "The root direcotry or prefix for Harbor image storage; keep untouched if not using QingStor",
       "type": "string",
       "changeable": false,
-      "default": "registry-root",
-      "required": "yes"
+      "default": "",
+      "required": "no"
     }, {
       "key": "QS_URL",
       "label": "QS_URL",
