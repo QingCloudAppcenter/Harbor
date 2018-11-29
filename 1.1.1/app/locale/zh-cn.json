@@ -48,7 +48,7 @@
   "web_node":"主服务节点",
   "log_node":"日志节点",
   "storage_node":"存储节点",
-  "If QingStor will be used as Harbor's backend, then DO NOT create this node; otherwise please create one; default to 0 meaning not to create": "如果使用 QingStor 做 Harbor 的后端存储则不要创建此节点，否则需要创建；默认为 0 表示不创建",
+  "If QingStor will be used as Harbor's backend, then DO NOT create this node; otherwise please create one; default to 0 meaning not to create": "使用本地存储请选择 1 ，使用 QingStor 请选择 0",
   "Configuration properties":"服务配置参数",
   "HARBOR_HOST":"Harbor 地址",
   "HARBOR_MYSQL_PW":"MySQL 密码",
