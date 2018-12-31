@@ -8,6 +8,8 @@
   "The version of the application you want to deploy":"选择想要部署的应用版本",
   "A unique ID of the application instance, used as the identifier before created":"应用实例创建前，系统分配的全局唯一标识符",
   "High Performance":"性能型",
+  "Resource Group": "快速配置",
+  "The resource group of the service": "使用默认配置快速创建集群。也可根据自身需求自定义节点配置",
   "vxnet": "私有网络",
   "Choose a vxnet to join": "选择要加入的私有网络",
   "loadbalancer": "负载均衡器",

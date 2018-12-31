@@ -1,0 +1,21 @@
+{{- if ne $nodeRole "log" }}
+hostsFile=/etc/hosts
+sed "/^# >> Harbor nodes./,/^# << Harbor nodes./d" $hostsFile > $hostsFile.swap
+cat >> $hostsFile.swap << HOSTS_FILE
+
+# >> Harbor nodes. WARNING: this is managed by script and please don't touch manually.
+{{ range getvs "/hosts/log_node/*/ip" }}{{ . }} log{{ end }}
+
+{{- range getvs "/host/role" | filter "web|job" }}
+{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }} redis{{ end }}
+{{ range getvs "/hosts/db_node/*/ip" }}{{ . }} postgresql{{ end }}
+{{- end }}
+
+{{- if eq $nodeRole "web" }}
+{{ range getvs "/hosts/job_node/*/ip" }}{{ . }} jobservice{{ end }}
+{{- end }}
+# << Harbor nodes. WARNING: this is managed by script and please don't touch manually.
+
+HOSTS_FILE
+mv $hostsFile.swap $hostsFile
+{{- end }}

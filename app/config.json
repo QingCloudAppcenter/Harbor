@@ -9,7 +9,7 @@
       "label": "name",
       "description": "The name of the Harbor service",
       "type": "string",
-      "default": "Harbor",
+      "default": "Harbor 1.7.0",
       "required": "no"
     }, {
       "key": "description",
@@ -238,7 +238,7 @@
         "label": "Instance Class",
         "description": "The instance type for the cluster to run, such as high performance, high performance plus",
         "type": "integer",
-        "default": 0,
+        "default": 1,
         "range": [
           0,
           1
@@ -249,9 +249,10 @@
         "label": "Volume Class",
         "description": "The volume type for each instance,such as high performance,high performance plus",
         "type": "integer",
-        "default": 0,
+        "default": 2,
         "range": [
           0,
+          2,
           3
         ],
         "required": "yes"
@@ -302,7 +303,7 @@
         "label": "Count",
         "description": "Number of nodes for replica cluster to create",
         "type": "integer",
-        "default": 0,
+        "default": 1,
         "range": [
           0,
           1
@@ -380,7 +381,6 @@
         "type": "integer",
         "default": 10,
         "min": 10,
-        "max": 1000,
         "step": 10,
         "required": "yes"
       }]
@@ -445,14 +445,6 @@
       "type": "string",
       "changeable": true,
       "default": "https://qingstor.com",
-      "required": "no"
-    }, {
-      "key": "REGISTRY_READONLY",
-      "label": "REGISTRY_READONLY",
-      "description": "Turn on readonly mode,only allow pull action",
-      "type": "boolean",
-      "changeable": true,
-      "default": false,
       "required": "no"
     }]
   }]

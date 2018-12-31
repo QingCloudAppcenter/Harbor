@@ -1,7 +1,0 @@
-[template]
-src = "hosts.tmpl"
-dest = "/etc/hosts"
-keys = [
-  "/",
-]
-reload_cmd = "/opt/harborapp/bin/app.sh restart web"
