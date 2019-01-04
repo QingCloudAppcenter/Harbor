@@ -268,7 +268,7 @@
       }]
     }, {
       "key": "job_node",
-      "description": "",
+      "description": "The node to run background jobs like image replication, GC, etc.",
       "label": "job_node",
       "type": "array",
       "properties": [{
