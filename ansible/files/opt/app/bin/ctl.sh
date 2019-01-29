@@ -157,8 +157,8 @@ migrateDb() {
   # Replace default password with the generated stronger one for super user
   docker run --rm -di --name update-passwd --env-file=/opt/app/conf/db/env -v $dbDataDir:/var/lib/postgresql/data goharbor/harbor-db:v1.7.0 || return $EC_UPDATE_DB_PWD_INIT
   retry 30 2 checkContainer update-passwd || return $EC_UPDATE_DB_PWD_START
-  docker exec -i update-passwd sh -c "psql -U postgres -c \"alter user postgres with encrypted password '\$POSTGRES_PASSWORD'\"" || return $EC_UPDATE_DB_PWD_RUN
-  docker rm -f update-passwd || return $EC_UPDATE_DB_PWD_STOP
+  docker exec -i update-passwd sh -c "psql -U postgres -c \"alter user postgres with password '\$POSTGRES_PASSWORD'\"" || return $EC_UPDATE_DB_PWD_RUN
+  docker stop update-passwd || return $EC_UPDATE_DB_PWD_STOP
 }
 
 upgrade() {
