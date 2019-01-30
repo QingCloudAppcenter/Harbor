@@ -9,7 +9,7 @@
       "label": "name",
       "description": "The name of the Harbor service",
       "type": "string",
-      "default": "Harbor 1.7.0",
+      "default": "Harbor 1.7.1",
       "required": "no"
     }, {
       "key": "description",

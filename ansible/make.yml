@@ -4,7 +4,7 @@
   no_log: True
   gather_facts: no
   vars:
-    harborVersion: v1.7.0
+    harborVersion: v1.7.1
 
   tasks:
     - name: Copy confd toml files

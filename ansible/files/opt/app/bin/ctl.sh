@@ -155,7 +155,7 @@ migrateDb() {
   echo -n "y" | docker run -i --rm -e DB_USR=root -e DB_PWD=root123 -v $dbDataDir:/var/lib/mysql goharbor/harbor-migrator:v1.6.0 --db up || return $EC_UPGRADE_TO_160
 
   # Replace default password with the generated stronger one for super user
-  docker run --rm -di --name update-passwd --env-file=/opt/app/conf/db/env -v $dbDataDir:/var/lib/postgresql/data goharbor/harbor-db:v1.7.0 || return $EC_UPDATE_DB_PWD_INIT
+  docker run --rm -di --name update-passwd --env-file=/opt/app/conf/db/env -v $dbDataDir:/var/lib/postgresql/data goharbor/harbor-db:v1.7.1 || return $EC_UPDATE_DB_PWD_INIT
   retry 30 2 checkContainer update-passwd || return $EC_UPDATE_DB_PWD_START
   docker exec -i update-passwd sh -c "psql -U postgres -c \"alter user postgres with password '\$POSTGRES_PASSWORD'\"" || return $EC_UPDATE_DB_PWD_RUN
   docker stop update-passwd || return $EC_UPDATE_DB_PWD_STOP
