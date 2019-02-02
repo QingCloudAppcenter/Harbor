@@ -1,0 +1,57 @@
+{{- range getvs "/host/role" | filter "web|job" }}
+encrypted=$(echo -n {{ getv "/cluster/user_id" }}{{ getv "/cluster/global_uuid" }} | sha256sum | base64)
+redisPassword=${encrypted:0:16}
+
+cat > /opt/app/conf/registry/config.yml << REGISTRY_CONF_FILE
+version: 0.1
+log:
+  level: info
+  fields:
+    service: registry
+storage:
+  cache:
+    layerinfo: redis
+  {{- if len (ls "/hosts/storage_node") }}
+  filesystem:
+    rootdirectory: /storage
+  {{- else }}
+  s3:
+    accesskey: {{ getv "/env/QS_ACCESS" }}
+    secretkey: {{ getv "/env/QS_SECRET" }}
+    {{- $qsRegion := getv "/env/QS_ZONE" "pek3a" }}
+    region: {{ $qsRegion }}
+    {{- $qsUrl := split (getv "/env/QS_URL") "://" }}
+    regionendpoint: {{ index $qsUrl 0}}://s3.{{ $qsRegion }}.{{ index $qsUrl 1 }}
+    bucket: {{ getv "/env/QS_BUCKET" }}
+    rootdirectory: {{ getv "/env/QS_ROOT_DIRECTORY" "" }}
+  {{- end }}
+  maintenance:
+    uploadpurging:
+      enabled: false
+  delete:
+    enabled: true
+redis:
+  addr: redis:6379
+  password: $redisPassword
+  db: 1
+http:
+  addr: :5000
+  secret: placeholder
+  debug:
+    addr: localhost:5001
+auth:
+  token:
+    issuer: harbor-token-issuer
+    realm: {{ getv "/env/HARBOR_HOST" }}/service/token
+    rootcertbundle: /etc/registry/root.crt
+    service: harbor-registry
+notifications:
+  endpoints:
+  - name: harbor
+    disabled: false
+    url: http://core:8080/service/notifications
+    timeout: 3000ms
+    threshold: 5
+    backoff: 1s
+REGISTRY_CONF_FILE
+{{- end }}

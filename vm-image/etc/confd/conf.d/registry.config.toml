@@ -1,7 +1,0 @@
-[template]
-src = "registry.config.yml.tmpl"
-dest = "/opt/harbor/bin/harbor/common/config/registry/config.yml"
-keys = [
-  "/",
-]
-reload_cmd = "/opt/harborapp/bin/app.sh restart web"

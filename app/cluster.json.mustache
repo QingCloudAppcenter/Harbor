@@ -1,15 +1,14 @@
 {
   "name": {{cluster.name}},
   "description": {{cluster.description}},
-  "upgrade_policy": [ "appv-t2kn8lrz", "appv-sn0liyi6", "appv-9we6rg37", "appv-32b0fb93", "appv-kilcnvix" ],
-  "upgrade_roles": { "add": [ "storage_node" ] },
+  "upgrade_policy": [ "appv-utedkwla" ],
   "vxnet": {{cluster.vxnet}},
   "nodes": [{
     "role": "log_node",
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-8fmo1vww"
+      "image": "img-kubvgtvo"
     },
     "instance_class": {{cluster.log_node.instance_class}},
     "count": 1,
@@ -24,16 +23,25 @@
     },
     "user_access": true,
     "services": {
+      "init": {
+        "order": 1,
+        "cmd": "/opt/app/bin/ctl.sh init"
+      },
       "start": {
         "order": 1,
-        "cmd": "/opt/harbor/bin/manager.sh start /opt/harbor/bin/docker-compose.log.yml"
+        "cmd": "/opt/app/bin/ctl.sh start"
       },
       "stop": {
         "order": 4,
-        "cmd": "/opt/harbor/bin/manager.sh stop /opt/harbor/bin/docker-compose.log.yml"
+        "cmd": "/opt/app/bin/ctl.sh stop"
       },
       "restart": {
-        "cmd": "/opt/harbor/bin/manager.sh restart /opt/harbor/bin/docker-compose.log.yml"
+        "order": 1,
+        "cmd": "/opt/app/bin/ctl.sh restart"
+      },
+      "upgrade": {
+        "order": 1,
+        "cmd": "/opt/app/bin/ctl.sh upgrade"
       }
     }
   }, {
@@ -41,7 +49,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-8fmo1vww"
+      "image": "img-kubvgtvo"
     },
     "instance_class": {{cluster.storage_node.instance_class}},
     "count": {{cluster.storage_node.count}},
@@ -57,36 +65,32 @@
     "user_access": false,
     "services": {
       "init": {
-        "order": 1,
-        "cmd": "/opt/harborapp/bin/app.sh init storage"
+        "order": 2,
+        "cmd": "/opt/app/bin/ctl.sh init"
       },
       "start": {
-        "order": 1,
-        "cmd": "/opt/harborapp/bin/app.sh reset storage"
+        "order": 2,
+        "cmd": "/opt/app/bin/ctl.sh start"
       },
       "stop": {
-        "order": 4,
-        "cmd": "/opt/harborapp/bin/app.sh stop storage"
+        "order": 3,
+        "cmd": "/opt/app/bin/ctl.sh stop"
       },
       "restart": {
-        "cmd": "/opt/harborapp/bin/app.sh reset storage"
+        "order": 2,
+        "cmd": "/opt/app/bin/ctl.sh restart"
+      },
+      "upgrade": {
+        "order": 2,
+        "cmd": "/opt/app/bin/ctl.sh upgrade"
       }
-    },
-    "health_check": {
-      "enable": true,
-      "interval_sec": 60,
-      "timeout_sec": 10,
-      "action_timeout_sec": 30,
-      "healthy_threshold": 2,
-      "unhealthy_threshold": 2,
-      "check_cmd": "/opt/harborapp/bin/app.sh check storage"
     }
   }, {
     "role": "db_node",
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-8fmo1vww"
+      "image": "img-kubvgtvo"
     },
     "instance_class": {{cluster.db_node.instance_class}},
     "count": 1,
@@ -101,25 +105,34 @@
     },
     "user_access": false,
     "services": {
+      "init": {
+        "order": 2,
+        "cmd": "/opt/app/bin/ctl.sh init"
+      },
       "start": {
         "order": 2,
-        "cmd": "/opt/harbor/bin/manager.sh start /opt/harbor/bin/docker-compose.db.yml"
+        "cmd": "/opt/app/bin/ctl.sh start"
       },
       "stop": {
         "order": 3,
-        "cmd": "/opt/harbor/bin/manager.sh stop /opt/harbor/bin/docker-compose.db.yml"
+        "cmd": "/opt/app/bin/ctl.sh stop"
       },
       "restart": {
-        "cmd": "/opt/harbor/bin/manager.sh restart /opt/harbor/bin/docker-compose.db.yml"
+        "order": 2,
+        "cmd": "/opt/app/bin/ctl.sh restart"
+      },
+      "upgrade": {
+        "order": 2,
+        "cmd": "/opt/app/bin/ctl.sh upgrade",
+        "timeout": 86400
       }
     }
-  },
-  {
+  }, {
     "role": "cache_node",
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-8fmo1vww"
+      "image": "img-kubvgtvo"
     },
     "instance_class": {{cluster.cache_node.instance_class}},
     "count": 1,
@@ -127,65 +140,33 @@
     "memory": {{cluster.cache_node.memory}},
     "user_access": false,
     "services": {
+      "init": {
+        "order": 2,
+        "cmd": "/opt/app/bin/ctl.sh init"
+      },
       "start": {
         "order": 2,
-        "cmd": "/opt/harbor/bin/manager.sh start /opt/harbor/bin/docker-compose.redis.yml"
+        "cmd": "/opt/app/bin/ctl.sh start"
       },
       "stop": {
         "order": 3,
-        "cmd": "/opt/harbor/bin/manager.sh stop /opt/harbor/bin/docker-compose.redis.yml"
-      },
-      "restart": {
-        "cmd": "/opt/harbor/bin/manager.sh restart /opt/harbor/bin/docker-compose.redis.yml"
-      }
-    }
-  },{
-    "role": "job_node",
-    "container": {
-      "type": "kvm",
-      "zone": "pek3a",
-      "image": "img-8fmo1vww"
-    },
-    "instance_class": {{cluster.job_node.instance_class}},
-    "count": {{cluster.job_node.count}},
-    "cpu": {{cluster.job_node.cpu}},
-    "memory": {{cluster.job_node.memory}},
-    "advanced_actions": ["scale_horizontal"],
-    "user_access": false,
-    "services": {
-      "init": {
-        "order": 4,
-        "cmd": "/opt/harborapp/bin/app.sh init job"
-      },
-      "start": {
-        "order": 4,
-        "cmd": "/opt/harborapp/bin/app.sh start job"
-      },
-      "stop": {
-        "order": 2,
-        "cmd": "/opt/harbor/bin/manager.sh stop /opt/harbor/bin/docker-compose.job.yml"
+        "cmd": "/opt/app/bin/ctl.sh stop"
       },
       "restart": {
         "order": 2,
-        "cmd": "/opt/harborapp/bin/app.sh restart job"
+        "cmd": "/opt/app/bin/ctl.sh restart"
+      },
+      "upgrade": {
+        "order": 2,
+        "cmd": "/opt/app/bin/ctl.sh upgrade"
       }
-    },
-    "env": {
-      "HARBOR_HOST": {{env.HARBOR_HOST}},
-      "REGISTRY_READONLY": {{env.REGISTRY_READONLY}},
-      "QS_ACCESS": {{env.QS_ACCESS}},
-      "QS_SECRET": {{env.QS_SECRET}},
-      "QS_BUCKET": {{env.QS_BUCKET}},
-      "QS_ZONE": {{env.QS_ZONE}},
-      "QS_URL": {{env.QS_URL}},
-      "QS_ROOT_DIRECTORY": {{env.QS_ROOT_DIRECTORY}}
     }
-  },{
+  }, {
     "role": "web_node",
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-8fmo1vww"
+      "image": "img-kubvgtvo"
     },
     "instance_class": {{cluster.web_node.instance_class}},
     "count": {{cluster.web_node.count}},
@@ -197,29 +178,27 @@
     "services": {
       "init": {
         "order": 3,
-        "cmd": "/opt/harborapp/bin/app.sh init web"
+        "cmd": "/opt/app/bin/ctl.sh init"
       },
       "start": {
         "order": 3,
-        "cmd": "/opt/harborapp/bin/app.sh start web"
+        "cmd": "/opt/app/bin/ctl.sh start"
       },
       "stop": {
-        "order": 1,
-        "cmd": "/opt/harbor/bin/manager.sh stop /opt/harbor/bin/docker-compose.web.yml"
+        "order": 2,
+        "cmd": "/opt/app/bin/ctl.sh stop"
       },
       "restart": {
-        "cmd": "/opt/harborapp/bin/app.sh restart web"
+        "order": 3,
+        "cmd": "/opt/app/bin/ctl.sh restart"
       },
-      "cleanImage": {
-        "type": "custom",
-        "cmd": "/opt/harbor/bin/cleanImage.sh",
-        "nodes_to_execute_on": 1,
-        "timeout": 600
+      "upgrade": {
+        "order": 3,
+        "cmd": "/opt/app/bin/ctl.sh upgrade"
       }
     },
     "env": {
       "HARBOR_HOST": {{env.HARBOR_HOST}},
-      "REGISTRY_READONLY": {{env.REGISTRY_READONLY}},
       "QS_ACCESS": {{env.QS_ACCESS}},
       "QS_SECRET": {{env.QS_SECRET}},
       "QS_BUCKET": {{env.QS_BUCKET}},
@@ -227,5 +206,59 @@
       "QS_URL": {{env.QS_URL}},
       "QS_ROOT_DIRECTORY": {{env.QS_ROOT_DIRECTORY}}
     }
-  }]
+  }, {
+    "role": "job_node",
+    "container": {
+      "type": "kvm",
+      "zone": "pek3a",
+      "image": "img-kubvgtvo"
+    },
+    "instance_class": {{cluster.job_node.instance_class}},
+    "count": {{cluster.job_node.count}},
+    "cpu": {{cluster.job_node.cpu}},
+    "memory": {{cluster.job_node.memory}},
+    "advanced_actions": ["scale_horizontal"],
+    "user_access": false,
+    "services": {
+      "init": {
+        "order": 4,
+        "cmd": "/opt/app/bin/ctl.sh init"
+      },
+      "start": {
+        "order": 4,
+        "cmd": "/opt/app/bin/ctl.sh start"
+      },
+      "stop": {
+        "order": 1,
+        "cmd": "/opt/app/bin/ctl.sh stop"
+      },
+      "restart": {
+        "order": 4,
+        "cmd": "/opt/app/bin/ctl.sh restart"
+      },
+      "upgrade": {
+        "order": 4,
+        "cmd": "/opt/app/bin/ctl.sh upgrade"
+      }
+    },
+    "env": {
+      "HARBOR_HOST": {{env.HARBOR_HOST}},
+      "QS_ACCESS": {{env.QS_ACCESS}},
+      "QS_SECRET": {{env.QS_SECRET}},
+      "QS_BUCKET": {{env.QS_BUCKET}},
+      "QS_ZONE": {{env.QS_ZONE}},
+      "QS_URL": {{env.QS_URL}},
+      "QS_ROOT_DIRECTORY": {{env.QS_ROOT_DIRECTORY}}
+    }
+  }],
+  "health_check": {
+    "enable": true,
+    "interval_sec": 60,
+    "timeout_sec": 10,
+    "action_timeout_sec": 60,
+    "healthy_threshold": 2,
+    "unhealthy_threshold": 2,
+    "check_cmd": "/opt/app/bin/ctl.sh check",
+    "action_cmd": "/opt/app/bin/ctl.sh restart"
+  }
 }
