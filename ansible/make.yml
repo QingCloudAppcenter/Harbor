@@ -1,10 +1,10 @@
 ---
 - hosts: appcenter
-  remote_user: root
-  no_log: True
-  gather_facts: no
   vars:
-    harborVersion: v1.7.1
+    harborVersion: v1.7.4
+    containerdVersion: 1.2.4
+    dockerVersion: 18.09.3
+    dockerComposeVersion: 1.23.1
 
   tasks:
     - name: Copy confd toml files
@@ -13,7 +13,7 @@
         dest: /etc/confd/conf.d/make.sh.toml
 
     - name: Compile tmpl files
-      raw: |
+      shell: |
         srcDir=files/etc/confd
         destDir=files/tmp/confd
         rm -rf $destDir
@@ -26,6 +26,8 @@
           echo "######## templates from `basename $tmpl`" >> $tmplFile
           cat $tmpl >> $tmplFile
         done
+      args:
+        executable: /bin/bash
       delegate_to: localhost
 
     - name: Copy confd tmpl files
@@ -39,28 +41,58 @@
         dest: /etc/docker/
         directory_mode: yes
 
-    - name: Copy Binaries
+    - name: Copy binaries
       copy:
         src: files/opt/
         dest: /opt/
         directory_mode: yes
 
-    - name: Add Docker GPG key
-      apt_key: url=https://download.docker.com/linux/ubuntu/gpg
-    - name: Add Docker APT repository
-      apt_repository:
-        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable
-
-    - name: Install Tools
+    - name: Install tools
       apt:
         update_cache: yes
-        name: ['nfs-common', 'docker-ce']
+        name: ['nfs-common']
         state: present
 
     # - name: Restart Docker Daemon to respect registry mirror configuration
     #   service:
     #     name: docker
     #     state: restarted
+
+    - name: Download reusable containerd binaries locally
+      get_url:
+        url: "https://download.docker.com/linux/ubuntu/dists/xenial/pool/stable/amd64/containerd.io_{{ containerdVersion }}-1_amd64.deb"
+        dest: "files/tmp/containerd-{{ containerdVersion }}.deb"
+      delegate_to: localhost
+
+    - name: Download reusable Docker CE CLI binaries locally
+      get_url:
+        url: "https://download.docker.com/linux/ubuntu/dists/xenial/pool/stable/amd64/docker-ce-cli_{{ dockerVersion }}~3-0~ubuntu-xenial_amd64.deb"
+        dest: "files/tmp/docker-ce-cli-{{ dockerVersion }}.deb"
+      delegate_to: localhost
+
+    - name: Download reusable Docker CE binaries locally
+      get_url:
+        url: "https://download.docker.com/linux/ubuntu/dists/xenial/pool/stable/amd64/docker-ce_{{ dockerVersion }}~3-0~ubuntu-xenial_amd64.deb"
+        dest: "files/tmp/docker-ce-{{ dockerVersion }}.deb"
+      delegate_to: localhost
+
+    - name: Copy Docker binaries
+      copy:
+        src: "files/tmp/{{ item }}"
+        dest: "/tmp/{{ item }}"
+      with_items:
+        - "containerd-{{ containerdVersion }}.deb"
+        - "docker-ce-cli-{{ dockerVersion }}.deb"
+        - "docker-ce-{{ dockerVersion }}.deb"
+
+    - name: Install Docker
+      apt:
+        deb: "/tmp/{{ item }}.deb"
+        state: present
+      with_items:
+        - "containerd-{{ containerdVersion }}"
+        - "docker-ce-cli-{{ dockerVersion }}"
+        - "docker-ce-{{ dockerVersion }}"
 
     - name: Pull Docker Images
       command: docker pull {{ item }}
@@ -84,13 +116,13 @@
 
     - name: Download reusable Docker Compose binaries locally
       get_url:
-        url: https://github.com/docker/compose/releases/download/1.23.1/docker-compose-Linux-x86_64
-        dest: files/tmp/docker-compose
+        url: "https://github.com/docker/compose/releases/download/{{ dockerComposeVersion }}/docker-compose-Linux-x86_64"
+        dest: "files/tmp/docker-compose-{{ dockerComposeVersion }}"
       delegate_to: localhost
 
-    - name: Copy Binaries
+    - name: Copy Docker Compose binary
       copy:
-        src: files/tmp/docker-compose
+        src: "files/tmp/docker-compose-{{ dockerComposeVersion }}"
         dest: /usr/local/bin/docker-compose
         mode: 0755
 

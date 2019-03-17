@@ -1,5 +1,5 @@
 cat > /opt/app/conf/docker-compose.yml << DOCKER_COMPOSE_FILE
-version: '2'
+version: '2.1'
 services:
   {{- if eq $nodeRole "log" }}
   log:
@@ -9,6 +9,8 @@ services:
     networks:
       - harbor
     dns_search: .
+    healthcheck:
+      test: netstat -ltun | grep 10514
     ports:
       - 1514:10514
     cap_drop:

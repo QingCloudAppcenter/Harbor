@@ -9,7 +9,7 @@
       "label": "name",
       "description": "The name of the Harbor service",
       "type": "string",
-      "default": "Harbor 1.7.1",
+      "default": "Harbor 1.7.4",
       "required": "no"
     }, {
       "key": "description",
@@ -25,6 +25,13 @@
       "type": "string",
       "default": "",
       "required": "yes"
+    }, {
+      "key": "resource_group",
+      "label": "Resource Configuration",
+      "description": "Local Storage: for testing; QingStor: for production",
+      "type": "string",
+      "default": "QingStor",
+      "range": ["Local Storage", "QingStor"]
     }, {
       "key": "web_node",
       "description": "",
@@ -231,6 +238,7 @@
           0,
           1
         ],
+        "resource_group": [1, 0],
         "changeable": false,
         "required": "yes"
       }, {

@@ -1,14 +1,17 @@
 {
   "name": {{cluster.name}},
   "description": {{cluster.description}},
-  "upgrade_policy": [ "appv-utedkwla" ],
+  "upgrade_policy": [
+    "appv-p3qbt6y6",
+    "appv-utedkwla"
+  ],
   "vxnet": {{cluster.vxnet}},
   "nodes": [{
     "role": "log_node",
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-kubvgtvo"
+      "image": "img-skqg9rgt"
     },
     "instance_class": {{cluster.log_node.instance_class}},
     "count": 1,
@@ -49,7 +52,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-kubvgtvo"
+      "image": "img-skqg9rgt"
     },
     "instance_class": {{cluster.storage_node.instance_class}},
     "count": {{cluster.storage_node.count}},
@@ -90,7 +93,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-kubvgtvo"
+      "image": "img-skqg9rgt"
     },
     "instance_class": {{cluster.db_node.instance_class}},
     "count": 1,
@@ -132,7 +135,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-kubvgtvo"
+      "image": "img-skqg9rgt"
     },
     "instance_class": {{cluster.cache_node.instance_class}},
     "count": 1,
@@ -166,7 +169,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-kubvgtvo"
+      "image": "img-skqg9rgt"
     },
     "instance_class": {{cluster.web_node.instance_class}},
     "count": {{cluster.web_node.count}},
@@ -211,7 +214,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-kubvgtvo"
+      "image": "img-skqg9rgt"
     },
     "instance_class": {{cluster.job_node.instance_class}},
     "count": {{cluster.job_node.count}},
