@@ -3,7 +3,7 @@ version: '2.1'
 services:
   {{- if eq $nodeRole "log" }}
   log:
-    image: goharbor/harbor-log:v1.7.1
+    image: goharbor/harbor-log:\$HARBOR_VERSION
     container_name: log
     restart: always
     networks:
@@ -53,7 +53,7 @@ services:
   {{- end }}
   {{- if eq $nodeRole "cache" }}
   redis:
-    image: goharbor/redis-photon:v1.7.1
+    image: goharbor/redis-photon:\$HARBOR_VERSION
     container_name: redis
     restart: always
     cap_drop:
@@ -78,7 +78,7 @@ services:
   {{- end }}
   {{- if eq $nodeRole "db" }}
   postgresql:
-    image: goharbor/harbor-db:v1.7.1
+    image: goharbor/harbor-db:\$HARBOR_VERSION
     container_name: db
     env_file:
       - ./db/env
@@ -105,7 +105,7 @@ services:
   {{- end }}
   {{- range getvs "/host/role" | filter "web|job" }}
   registry:
-    image: goharbor/registry-photon:v2.6.2-v1.7.1
+    image: goharbor/registry-photon:v2.6.2-\$HARBOR_VERSION
     container_name: registry
     restart: always
     cap_drop:
@@ -129,7 +129,7 @@ services:
         syslog-address: "tcp://log:1514"
         tag: "{{ $nodeRole }}.registry"
   registryctl:
-    image: goharbor/harbor-registryctl:v1.7.1
+    image: goharbor/harbor-registryctl:\$HARBOR_VERSION
     container_name: registryctl
     env_file:
       - ./registryctl/env
@@ -153,7 +153,7 @@ services:
         syslog-address: "tcp://log:1514"
         tag: "{{ $nodeRole }}.registryctl"
   adminserver:
-    image: goharbor/harbor-adminserver:v1.7.1
+    image: goharbor/harbor-adminserver:\$HARBOR_VERSION
     container_name: adminserver
     env_file:
       - ./adminserver/env
@@ -179,7 +179,7 @@ services:
         syslog-address: "tcp://log:1514"
         tag: "{{ $nodeRole }}.adminserver"
   core:
-    image: goharbor/harbor-core:v1.7.1
+    image: goharbor/harbor-core:\$HARBOR_VERSION
     container_name: core
     env_file:
       - ./core/env
@@ -217,7 +217,7 @@ services:
   {{- end }}
   {{- if eq $nodeRole "job" }}
   jobservice:
-    image: goharbor/harbor-jobservice:v1.7.1
+    image: goharbor/harbor-jobservice:\$HARBOR_VERSION
     container_name: jobservice
     env_file:
       - ./jobservice/env
@@ -250,7 +250,7 @@ services:
   {{- end }}
   {{- if eq $nodeRole "web" }}
   portal:
-    image: goharbor/harbor-portal:v1.7.1
+    image: goharbor/harbor-portal:\$HARBOR_VERSION
     container_name: portal
     restart: always
     cap_drop:
@@ -271,7 +271,7 @@ services:
         syslog-address: "tcp://log:1514"
         tag: "web.portal"
   proxy:
-    image: goharbor/nginx-photon:v1.7.1
+    image: goharbor/nginx-photon:\$HARBOR_VERSION
     container_name: nginx
     restart: always
     cap_drop:

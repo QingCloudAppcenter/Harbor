@@ -9,7 +9,7 @@
       "label": "name",
       "description": "The name of the Harbor service",
       "type": "string",
-      "default": "Harbor 1.7.4",
+      "default": "Harbor",
       "required": "no"
     }, {
       "key": "description",
@@ -27,7 +27,7 @@
       "required": "yes"
     }, {
       "key": "resource_group",
-      "label": "Resource Configuration",
+      "label": "Express Configuration",
       "description": "Local Storage: for testing; QingStor: for production",
       "type": "string",
       "default": "QingStor",
@@ -261,7 +261,8 @@
         "range": [
           0,
           2,
-          3
+          3,
+          5
         ],
         "required": "yes"
       }, {
