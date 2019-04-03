@@ -8,9 +8,10 @@ EC_LOGGING=2 # logging: failed to log remotely
 EC_CHECK_SVCS=3 # healthcheck: some Docker services not running
 EC_CHECK_PORT=4 # healthcheck: some ports not listening
 EC_RETRY_FAILED=5 # retry: failed several times
-EC_UPGRADE_DB_DIR=10 # upgrade failure: no DB data directory mount
+EC_UPGRADE_DB_NO_MOUNT=10 # upgrade failure: no DB data directory mount
 EC_UPGRADE_DISK_SPACE=11 # upgrade failure: no enough disk space (>33%)
 EC_UPGRADE_DB_DIR_EXISTS=12 # upgrade failure: DB data directory is not empty
+EC_UPGRADE_DB_NO_DIR=13 # upgrade failure: no DB data directory mount
 EC_UPGRADE_TO_130=20 # upgrade failure: DB migration to Harbor v1.3.0
 EC_UPGRADE_TO_160=21 # upgrade failure: DB migration to Harbor v1.6.0
 EC_UPDATE_DB_PWD_INIT=22 # upgrade failure: DB create container to update to random super password
@@ -155,7 +156,7 @@ migrateDb() {
   echo -n "y" | docker run -i --rm -e DB_USR=root -e DB_PWD=root123 -v $dbDataDir:/var/lib/mysql goharbor/harbor-migrator:v1.6.0 --db up || return $EC_UPGRADE_TO_160
 
   # Replace default password with the generated stronger one for super user
-  docker run --rm -di --name update-passwd --env-file=/opt/app/conf/db/env -v $dbDataDir:/var/lib/postgresql/data goharbor/harbor-db:v1.7.1 || return $EC_UPDATE_DB_PWD_INIT
+  docker run --rm -di --name update-passwd --env-file=/opt/app/conf/db/env -v $dbDataDir:/var/lib/postgresql/data goharbor/harbor-db:$HARBOR_VERSION || return $EC_UPDATE_DB_PWD_INIT
   retry 30 2 checkContainer update-passwd || return $EC_UPDATE_DB_PWD_START
   docker exec -i update-passwd sh -c "psql -U postgres -c \"alter user postgres with password '\$POSTGRES_PASSWORD'\"" || return $EC_UPDATE_DB_PWD_RUN
   docker stop update-passwd || return $EC_UPDATE_DB_PWD_STOP
@@ -163,24 +164,28 @@ migrateDb() {
 
 upgrade() {
   if [ "$NODE_ROLE" = "db" ]; then
-    [ -d $dbMountDir ] || return $EC_UPGRADE_DB_DIR
+    [ -d $dbMountDir ] || return $EC_UPGRADE_DB_NO_DIR
 
-    echo About to upgrade. Checking volume usage ...
-    used=$(df --output=pcent $dbMountDir | tail -1 | tr -d '%')
-    [ $used -lt 33 ] || {
-      echo Not enough disk volume for backup: $used% used. Make it to less than 33%.
-      return $EC_UPGRADE_DISK_SPACE
-    }
+    if [ -f "$dbMountDir/ibdata1" ]; then
+      echo About to upgrade. Checking volume usage ...
+      used=$(df --output=pcent $dbMountDir | tail -1 | tr -d '%')
+      [ $used -lt 33 ] || {
+        echo Not enough disk volume for backup: $used% used. Make it to less than 33%.
+        return $EC_UPGRADE_DISK_SPACE
+      }
 
-    echo Duplicating DB data ...
-    duplicateDb
+      echo Duplicating DB data ...
+      duplicateDb
 
-    echo Migrating DB data ...
-    migrateDb || {
-      retcode=$?
-      revertDb
-      return $retcode
-    }
+      echo Migrating DB data ...
+      migrateDb || {
+        retcode=$?
+        revertDb
+        return $retcode
+      }
+    else
+      [ -d "$dbDataDir" ] || return $EC_UPGRADE_DB_NO_DIR
+    fi
   fi
 
   init
