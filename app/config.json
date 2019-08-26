@@ -262,7 +262,8 @@
           0,
           2,
           3,
-          5
+          5,
+          6
         ],
         "required": "yes"
       }, {
@@ -454,6 +455,14 @@
       "type": "string",
       "changeable": true,
       "default": "https://qingstor.com",
+      "required": "no"
+    }, {
+      "key": "s3.url.used",
+      "label": "S3 URL Used",
+      "description": "The specified URL is non-QingStor",
+      "type": "boolean",
+      "changeable": true,
+      "default": false,
       "required": "no"
     }]
   }]

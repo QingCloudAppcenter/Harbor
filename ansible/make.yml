@@ -1,7 +1,7 @@
 ---
 - hosts: appcenter
   vars:
-    harborVersion: v1.7.4
+    harborVersion: v1.7.5
     appAgentVersion: v1.0.6
     containerdVersion: 1.2.4
     dockerVersion: 18.09.3
@@ -15,9 +15,11 @@
 
     - file: path=files/tmp/confd-tmpl state=absent
       delegate_to: localhost
+      run_once: True
 
     - file: path=files/tmp/confd-tmpl state=directory
       delegate_to: localhost
+      run_once: True
 
     - name: Copy tmpl files
       vars:
@@ -27,6 +29,7 @@
         src: "{{ srcDir }}"
         dest: "{{ destDir }}"
       delegate_to: localhost
+      run_once: True
 
     - name: Generate tmpl files
       template:
@@ -35,6 +38,7 @@
       with_fileglob:
         - templates/etc/confd/templates/*.j2
       delegate_to: localhost
+      run_once: True
 
     - name: Compile tmpl files
       shell: |
@@ -47,6 +51,7 @@
       args:
         executable: /bin/bash
       delegate_to: localhost
+      run_once: True
 
     - name: Copy confd tmpl files
       copy:
@@ -135,7 +140,8 @@
         - "goharbor/harbor-portal:{{ harborVersion }}"
         - "goharbor/harbor-adminserver:{{ harborVersion }}"
         - "goharbor/harbor-db:{{ harborVersion }}"
-        - "erichough/nfs-server:1.2.0"
+        - "goharbor/chartmuseum-photon:v0.8.1-{{ harborVersion }}"
+        - "erichough/nfs-server:2.2.1"
 
     - name: Download reusable Docker Compose binaries locally
       get_url:

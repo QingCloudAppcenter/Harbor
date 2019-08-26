@@ -31,7 +31,7 @@ services:
   {{- end }}
   {{- if eq $nodeRole "storage" }}
   storage:
-    image: erichough/nfs-server:1.2.0
+    image: erichough/nfs-server:2.2.1
     container_name: nfs-server
     restart: always
     privileged: true
@@ -270,6 +270,36 @@ services:
       options:
         syslog-address: "tcp://log:1514"
         tag: "web.portal"
+  chartmuseum:
+    container_name: chartmuseum
+    image: goharbor/chartmuseum-photon:v0.8.1-\$HARBOR_VERSION
+    env_file:
+      ./chartserver/env
+    restart: always
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - SETGID
+      - SETUID
+    networks:
+      - harbor
+    dns_search: .
+    extra_hosts:
+      - redis:{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }}{{ end }}
+    volumes:
+      {{- if len (ls "/hosts/storage_node") }}
+      - /data/registry:/chart_storage:z
+      {{- end }}
+      - ./chartserver/docker-entrypoint.sh:/docker-entrypoint.sh:z
+      - ./chartserver:/etc/chartserver:z
+      - ./custom-ca-bundle.crt:/harbor_cust_cert/custom-ca-bundle.crt:z
+    logging:
+      driver: "syslog"
+      options:
+        syslog-address: "tcp://log:1514"
+        tag: "web.chartmuseum"
   proxy:
     image: goharbor/nginx-photon:\$HARBOR_VERSION
     container_name: nginx
