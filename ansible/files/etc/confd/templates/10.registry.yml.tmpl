@@ -20,8 +20,12 @@ storage:
     secretkey: {{ getv "/env/QS_SECRET" }}
     {{- $qsRegion := getv "/env/QS_ZONE" "pek3a" }}
     region: {{ $qsRegion }}
+    {{- if eq (getv "/env/s3.url.used" "false") "true" }}
+    regionendpoint: {{ getv "/env/QS_URL" }}
+    {{- else }}
     {{- $qsUrl := split (getv "/env/QS_URL") "://" }}
     regionendpoint: {{ index $qsUrl 0}}://s3.{{ $qsRegion }}.{{ index $qsUrl 1 }}
+    {{- end }}
     bucket: {{ getv "/env/QS_BUCKET" }}
     rootdirectory: {{ getv "/env/QS_ROOT_DIRECTORY" "" }}
   {{- end }}
