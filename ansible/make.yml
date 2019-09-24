@@ -1,10 +1,10 @@
 ---
 - hosts: appcenter
   vars:
-    harborVersion: v1.7.5
+    harborVersion: v1.7.6
     appAgentVersion: v1.0.6
     containerdVersion: 1.2.4
-    dockerVersion: 18.09.3
+    dockerVersion: 18.09.9
     dockerComposeVersion: 1.23.1
 
   tasks:
