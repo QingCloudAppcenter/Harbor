@@ -70,5 +70,6 @@
   "QS_URL":"对象存储 URL",
   "S3 URL Used": "使用 S3 地址",
   "QS_ROOT_DIRECTORY":"存储根目录",
+  "err_code11": "此次升级需要备份数据库，请预留数据库节点 67% 以上的硬盘空间",
   "cleanImage":"清理镜像"
 }
