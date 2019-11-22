@@ -1,0 +1,7 @@
+{{- range getvs "/host/role" | filter "web|job" }}
+
+flush > /data/secret/registry/root.crt << ROOT_CRT_EOF
+$(echo $serviceKeys | cut -d' ' -f2 | base64 --decode)
+ROOT_CRT_EOF
+
+{{- end }}

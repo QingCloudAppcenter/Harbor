@@ -2,22 +2,20 @@
   "name": {{cluster.name}},
   "description": {{cluster.description}},
   "upgrade_policy": [
-    "appv-t2kn8lrz",
-    "appv-kilcnvix",
-    "appv-32b0fb93",
-    "appv-sn0liyi6",
-    "appv-9we6rg37"
+    "appv-l0d1tgn2",
+    "appv-tkc5qnwg",
+    "appv-z7hy8rjy",
+    "appv-lqqfiy30",
+    "appv-p3qbt6y6",
+    "appv-utedkwla"
   ],
-  "upgrade_roles": {
-    "add": [ "storage_node" ]
-  },
   "vxnet": {{cluster.vxnet}},
   "nodes": [{
     "role": "log_node",
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-j5zmi3bd"
+      "image": "img-tp2kowe2"
     },
     "instance_class": {{cluster.log_node.instance_class}},
     "count": 1,
@@ -33,32 +31,36 @@
     "user_access": true,
     "services": {
       "init": {
-        "order": 1,
-        "cmd": "/opt/app/bin/ctl.sh init"
+        "cmd": "appctl init"
       },
       "start": {
         "order": 1,
-        "cmd": "/opt/app/bin/ctl.sh start"
+        "cmd": "appctl start"
       },
       "stop": {
         "order": 4,
-        "cmd": "/opt/app/bin/ctl.sh stop"
+        "cmd": "appctl stop"
       },
       "restart": {
         "order": 1,
-        "cmd": "/opt/app/bin/ctl.sh restart"
+        "cmd": "appctl restart"
       },
       "upgrade": {
         "order": 1,
-        "cmd": "/opt/app/bin/ctl.sh upgrade"
+        "cmd": "appctl upgrade"
       }
+    },
+    "env": {
+      "web.console.enabled": {{env.web.console.enabled}},
+      "web.console.username": {{env.web.console.username}},
+      "web.console.password": {{env.web.console.password}}
     }
   }, {
     "role": "storage_node",
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-j5zmi3bd"
+      "image": "img-tp2kowe2"
     },
     "instance_class": {{cluster.storage_node.instance_class}},
     "count": {{cluster.storage_node.count}},
@@ -74,24 +76,23 @@
     "user_access": false,
     "services": {
       "init": {
-        "order": 2,
-        "cmd": "/opt/app/bin/ctl.sh init"
+        "cmd": "appctl init"
       },
       "start": {
         "order": 2,
-        "cmd": "/opt/app/bin/ctl.sh start"
+        "cmd": "appctl start"
       },
       "stop": {
         "order": 3,
-        "cmd": "/opt/app/bin/ctl.sh stop"
+        "cmd": "appctl stop"
       },
       "restart": {
         "order": 2,
-        "cmd": "/opt/app/bin/ctl.sh restart"
+        "cmd": "appctl restart"
       },
       "upgrade": {
         "order": 2,
-        "cmd": "/opt/app/bin/ctl.sh upgrade"
+        "cmd": "appctl upgrade"
       }
     }
   }, {
@@ -99,7 +100,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-j5zmi3bd"
+      "image": "img-tp2kowe2"
     },
     "instance_class": {{cluster.db_node.instance_class}},
     "count": 1,
@@ -115,24 +116,23 @@
     "user_access": false,
     "services": {
       "init": {
-        "order": 2,
-        "cmd": "/opt/app/bin/ctl.sh init"
+        "cmd": "appctl init"
       },
       "start": {
         "order": 2,
-        "cmd": "/opt/app/bin/ctl.sh start"
+        "cmd": "appctl start"
       },
       "stop": {
         "order": 3,
-        "cmd": "/opt/app/bin/ctl.sh stop"
+        "cmd": "appctl stop"
       },
       "restart": {
         "order": 2,
-        "cmd": "/opt/app/bin/ctl.sh restart"
+        "cmd": "appctl restart"
       },
       "upgrade": {
         "order": 2,
-        "cmd": "/opt/app/bin/ctl.sh upgrade",
+        "cmd": "appctl upgrade",
         "timeout": 86400
       }
     }
@@ -141,7 +141,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-j5zmi3bd"
+      "image": "img-tp2kowe2"
     },
     "instance_class": {{cluster.cache_node.instance_class}},
     "count": 1,
@@ -150,24 +150,23 @@
     "user_access": false,
     "services": {
       "init": {
-        "order": 2,
-        "cmd": "/opt/app/bin/ctl.sh init"
+        "cmd": "appctl init"
       },
       "start": {
         "order": 2,
-        "cmd": "/opt/app/bin/ctl.sh start"
+        "cmd": "appctl start"
       },
       "stop": {
         "order": 3,
-        "cmd": "/opt/app/bin/ctl.sh stop"
+        "cmd": "appctl stop"
       },
       "restart": {
         "order": 2,
-        "cmd": "/opt/app/bin/ctl.sh restart"
+        "cmd": "appctl restart"
       },
       "upgrade": {
         "order": 2,
-        "cmd": "/opt/app/bin/ctl.sh upgrade"
+        "cmd": "appctl upgrade"
       }
     }
   }, {
@@ -175,7 +174,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-j5zmi3bd"
+      "image": "img-tp2kowe2"
     },
     "instance_class": {{cluster.web_node.instance_class}},
     "count": {{cluster.web_node.count}},
@@ -184,26 +183,28 @@
     "loadbalancer": {{cluster.web_node.loadbalancer}},
     "advanced_actions": ["scale_horizontal"],
     "user_access": false,
+    "custom_metadata": {
+      "cmd": "appctl createKeys"
+    },
     "services": {
       "init": {
-        "order": 3,
-        "cmd": "/opt/app/bin/ctl.sh init"
+        "cmd": "appctl init"
       },
       "start": {
         "order": 3,
-        "cmd": "/opt/app/bin/ctl.sh start"
+        "cmd": "appctl start"
       },
       "stop": {
         "order": 2,
-        "cmd": "/opt/app/bin/ctl.sh stop"
+        "cmd": "appctl stop"
       },
       "restart": {
         "order": 3,
-        "cmd": "/opt/app/bin/ctl.sh restart"
+        "cmd": "appctl restart"
       },
       "upgrade": {
         "order": 3,
-        "cmd": "/opt/app/bin/ctl.sh upgrade"
+        "cmd": "appctl upgrade"
       }
     },
     "env": {
@@ -221,7 +222,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-j5zmi3bd"
+      "image": "img-tp2kowe2"
     },
     "instance_class": {{cluster.job_node.instance_class}},
     "count": {{cluster.job_node.count}},
@@ -231,24 +232,23 @@
     "user_access": false,
     "services": {
       "init": {
-        "order": 4,
-        "cmd": "/opt/app/bin/ctl.sh init"
+        "cmd": "appctl init"
       },
       "start": {
         "order": 4,
-        "cmd": "/opt/app/bin/ctl.sh start"
+        "cmd": "appctl start"
       },
       "stop": {
         "order": 1,
-        "cmd": "/opt/app/bin/ctl.sh stop"
+        "cmd": "appctl stop"
       },
       "restart": {
         "order": 4,
-        "cmd": "/opt/app/bin/ctl.sh restart"
+        "cmd": "appctl restart"
       },
       "upgrade": {
         "order": 4,
-        "cmd": "/opt/app/bin/ctl.sh upgrade"
+        "cmd": "appctl upgrade"
       }
     },
     "env": {
@@ -269,7 +269,7 @@
     "action_timeout_sec": 60,
     "healthy_threshold": 2,
     "unhealthy_threshold": 2,
-    "check_cmd": "/opt/app/bin/ctl.sh check",
-    "action_cmd": "/opt/app/bin/ctl.sh restart"
+    "check_cmd": "appctl check",
+    "action_cmd": "appctl revive"
   }
 }

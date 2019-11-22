@@ -464,6 +464,29 @@
       "changeable": true,
       "default": false,
       "required": "no"
+    }, {
+      "key": "web.console.enabled",
+      "label": "Enable web console",
+      "description": "enable web console to view and download files",
+      "type": "boolean",
+      "default": true,
+      "required": "no"
+    }, {
+      "key": "web.console.username",
+      "label": "Admin Username",
+      "description": "username of admin web console",
+      "type": "string",
+      "pattern": "^([a-z0-9.-]+)?$",
+      "default": "admin",
+      "required": "no"
+    }, {
+      "key": "web.console.password",
+      "label": "Admin Password",
+      "description": "password of admin web console",
+      "type": "password",
+      "pattern": "^\\w{0,24}$",
+      "default": "",
+      "required": "no"
     }]
   }]
 }
