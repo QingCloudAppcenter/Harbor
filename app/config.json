@@ -396,6 +396,23 @@
       }]
     }]
   }, {
+    "key": "service_params",
+    "description": "Custom service configuration properties",
+    "type": "array",
+    "properties": [
+      {
+        "key": "cmd",
+        "label": "command",
+        "description": "The reset pwd command for harbor",
+        "type": "string",
+        "default": "RESET LOGIN PASSWORD",
+        "range": [
+          "RESET LOGIN PASSWORD"
+        ],
+        "required": "yes"
+      }
+    ]
+  }, {
     "key": "env",
     "description": "Configuration properties",
     "type": "array",

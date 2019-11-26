@@ -33,7 +33,7 @@
 
 - name: install docker-py
   pip:
-    name: docker-py
+    name: ['docker-py', 'py-postgresql']
 
 - name: Download reusable containerd binaries locally
   get_url:

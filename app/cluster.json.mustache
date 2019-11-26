@@ -134,6 +134,14 @@
         "order": 2,
         "cmd": "appctl upgrade",
         "timeout": 86400
+      },
+      "run_command": {
+        "type": "custom",
+        "cmd": "python3 /opt/app/bin/node/resetPassword.py; appctl log resetPassword",
+        "timeout": 1200,
+        "service_params": {
+            "cmd": {{service_params.cmd}}
+        }
       }
     }
   }, {
