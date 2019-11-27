@@ -1,0 +1,34 @@
+
+flush > /etc/rsyslog.d/jobservice-logger.conf << LOGGER_CONF_EOF
+
+{{- if eq $nodeRole "log" }}
+
+# provides UDP syslog reception
+module(load="imudp")
+input(type="imudp" port="514")
+
+#$template IpTemplate,"/var/log/job-log-%FROMHOST-IP%.log"
+#*.*  ?IpTemplate
+$template Remote,"/var/log/job_log-%FROMHOST-IP%_%$YEAR%-%$MONTH%-%$DAY%.log"
+:FROMHOST-IP, !isequal, "127.0.0.1" ?Remote
+& ~
+
+
+{{- end }}
+
+{{- if eq $nodeRole "job" }}
+
+module(load="imfile" PollingInterval="10") #needs to be done just once
+
+# needs to be done for each file you want to watch
+input(type="imfile" File="/data/job_logs/*.log"
+     Tag="job"
+      StateFile="statefile1"
+      Severity="error"
+      Facility="local7")
+
+*.* @{{ range getvs "/hosts/log_node/*/ip" }}{{ . }}{{ end }}:514
+
+{{- end }}
+
+LOGGER_CONF_EOF
