@@ -28,7 +28,7 @@
 - name: install tools
   apt:
     update_cache: yes
-    name: ['nfs-common', 'python3-pip']
+    name: ['nfs-common', 'python3-pip', "nfs-kernel-server"]
     state: present
 
 - name: install docker-py
@@ -118,6 +118,7 @@
     - /data/secret/registry
     - /opt/app/conf/adminserver
     - /opt/app/conf/db
+    - /var/log/harbor/job_logs
 
 - name: protect binaries and configurations
   file:
@@ -163,6 +164,13 @@
 - name: mask harbor service
   systemd:
     name: harbor
+    enabled: no
+    masked: yes
+    state: stopped
+
+- name: mask nfs service
+  systemd:
+    name: nfs-server
     enabled: no
     masked: yes
     state: stopped
