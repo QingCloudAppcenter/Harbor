@@ -104,6 +104,14 @@
     dest: /usr/bin/docker-compose
     mode: 0755
 
+- name: Give insecure permissions to log file
+  file:
+    path: /var/log/harbor
+    owner: root
+    group: root
+    mode: '644'
+
+
 - name: prepare directories for Harbor
   file:
     path: "{{ item }}"
@@ -174,3 +182,10 @@
     enabled: no
     masked: yes
     state: stopped
+
+- name: Give insecure permissions to logrotate
+  file:
+    path: /opt/app/conf/log/logrotate.conf
+    owner: root
+    group: root
+    mode: '644'

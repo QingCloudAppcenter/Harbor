@@ -24,6 +24,7 @@ services:
       - /var/log/harbor/:/var/log/docker/:z
       - ./log/rsyslog.conf:/etc/rsyslog.d/rsyslog_docker.conf:z
       - ./log/logrotate.conf:/etc/logrotate.d/logrotate.conf:z
+      - /var/log/wtmp:/etc/log/wtmp:z
     logging:
       driver: "syslog"
       options:
