@@ -4,3 +4,10 @@ flush > $exportsDir/exports << EXPORTS_FILE
 /registry	{{ range ls "/hosts" | filter "(web|job)_node" }}{{ range getvs (printf "/hosts/%s/*/ip" .) }}{{ . }}(rw,sync,no_subtree_check) {{ end }}{{ end }}
 EXPORTS_FILE
 {{- end }}
+
+
+{{- if eq $nodeRole "job_node" }}
+mkdir -p /data/registry/job_logs
+chown 10000.10000 /data/registry/job_logs
+
+{{- end }}

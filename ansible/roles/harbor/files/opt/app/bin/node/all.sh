@@ -55,6 +55,7 @@ initNode() {
 initCluster() {
   if [ "$MY_ROLE" = "log" ]; then
     rm -rf /var/log/harbor/lost+found
+    ln -s -f /opt/app/conf/log/logrotate.conf  /etc/logrotate.d/joblogs.conf
   fi
 
   if [ "$MY_ROLE" = "storage" ]; then
