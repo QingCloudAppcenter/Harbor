@@ -203,7 +203,7 @@ services:
       - SETGID
       - SETUID
     volumes:
-      - /data/registry/job_logs:/var/log/jobs:z
+      - /data/job_logs:/var/log/jobs:z
       - ./jobservice/config.yml:/etc/jobservice/config.yml:z
     networks:
       - harbor

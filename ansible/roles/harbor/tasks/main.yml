@@ -90,7 +90,7 @@
     - "goharbor/harbor-portal:{{ harbor_version }}"
     - "goharbor/harbor-db:{{ harbor_version }}"
     - "goharbor/chartmuseum-photon:v0.9.0-{{ harbor_version }}"
-    - "erichough/nfs-server:2.2.1"
+    #- "erichough/nfs-server:2.2.1"
 
 - name: Download reusable Docker Compose binaries locally
   get_url:
