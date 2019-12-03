@@ -27,6 +27,7 @@ ensureRegistryMounted() {
     mount $mountSrc $clientMountPath
     touch $clientMountPath && log Successfully mounted!
   fi
+  mount  ${LOG_NODE_IP}:/var/log/harbor/job_logs    /data/job_logs 
 }
 
 ensureNfsModulesLoaded() {
@@ -186,10 +187,9 @@ check() {
   fi
 }
 
-resetLoginPwd() {
-  [[ -n "/opt/app/bin/node/resetPassword.py" ]] || { 
-    log "ERROR--> resetPassword.py  generate failed"
-    return 22 
+resetAdminPwd() {
+  [[ -n "/data/database/app-1.2.0/resetAdminPwd.sh" ]] || { 
+    cp /opt/app/bin/node/resetAdminPwd.sh /data/database/app-1.2.0/resetAdminPwd.sh
     }
-  python3 /opt/app/bin/node/resetPassword.py
+  docker exec -i  db sh -c "/var/lib/postgresql/data/resetAdminPwd.sh"
 }

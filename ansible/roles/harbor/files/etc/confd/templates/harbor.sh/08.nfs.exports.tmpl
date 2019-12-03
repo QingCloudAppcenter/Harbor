@@ -11,8 +11,3 @@ flush > /opt/app/conf/nfs-server/exports << LOG_EXPORTS_ENV
 /var/log/harbor/job_logs {{ range getvs "/hosts/job_node/*/ip" }}{{ . }}(rw,sync,no_root_squash,no_subtree_check)  {{ end }}
 LOG_EXPORTS_ENV
 {{- end }}
-
-{{- if eq $nodeRole "job" }}
-
-mount  {{ range getvs "/hosts/log_node/*/ip" }}{{ . }}{{ end }}:/var/log/harbor/job_logs    /data/job_logs 
-{{- end }}

@@ -137,11 +137,8 @@
       },
       "run_command": {
         "type": "custom",
-        "cmd": "appctl resetLoginPwd; appctl log resetPassword",
-        "timeout": 1200,
-        "service_params": {
-            "cmd": {{service_params.cmd}}
-        }
+        "cmd": "appctl resetAdminPwd",
+        "timeout": 1200
       }
     }
   }, {
