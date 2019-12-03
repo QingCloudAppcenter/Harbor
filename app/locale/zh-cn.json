@@ -75,5 +75,14 @@
   "The reset pwd command for harbor": "重置登陆密码为Harbor12345",
   "run_command": "执行命令",
   "command": "命令",
-  "Custom service configuration properties": "更多自定义操作"
+  "Custom service configuration properties": "更多自定义操作",
+  "web.console.enabled": "在线日志获取开关",
+  "web.console.username": "在线日志获取用户名",
+  "web.console.password": "在线日志获取验证密码",
+  "Admin Username": "caddy 用户名",
+  "username of admin web console": "在线日志获取界面的用户名",
+  "Enable web console": "在线日志获取器的开关",
+  "enable web console to view and download files": "是否启用日志在线获取功能，默认开启(true)",
+  "Admin Password": "caddy 密码",
+  "password of admin web console": "在线日志获取界面的登陆密码"
 }

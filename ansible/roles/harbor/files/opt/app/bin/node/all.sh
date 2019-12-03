@@ -21,7 +21,7 @@ ensureRegistryMounted() {
   [[ -n "$STORAGE_NODE_IP" ]] || return 0
 
   if ! grep -qs "$clientMountPath " /proc/mounts; then
-    local mountSrc="$STORAGE_NODE_IP:/registry"
+    local mountSrc="$STORAGE_NODE_IP:/data/registry"
     log "Mounting '$mountSrc' for registry ..."
     mkdir -p $clientMountPath
     mount $mountSrc $clientMountPath
@@ -56,6 +56,7 @@ initCluster() {
   if [ "$MY_ROLE" = "log" ]; then
     rm -rf /var/log/harbor/lost+found
     ln -s -f /opt/app/conf/log/logrotate.conf  /etc/logrotate.d/joblogs.conf
+    ln -s -f /opt/app/conf/nfs-server/exports /etc/exports
   fi
 
   if [ "$MY_ROLE" = "storage" ]; then
@@ -64,6 +65,7 @@ initCluster() {
 
     # Allow clients write files
     chmod -R 777 $serverMountPath
+    ln -s -f /opt/app/conf/nfs-server/exports /etc/exports
   fi
 
   if [ "$MY_ROLE" = "db" ]; then
@@ -179,5 +181,15 @@ checkServices() {
 
 check() {
   _check
+  if [ "$MY_ROLE" != "storage" ]; then
   checkServices
+  fi
+}
+
+resetLoginPwd() {
+  [[ -n "/opt/app/bin/node/resetPassword.py" ]] || { 
+    log "ERROR--> resetPassword.py  generate failed"
+    return 22 
+    }
+  python3 /opt/app/bin/node/resetPassword.py
 }

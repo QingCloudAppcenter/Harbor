@@ -56,5 +56,8 @@
   "QS_ZONE": "QingStor Zone",
   "QS_URL": "Address of QingStor",
   "QS_ROOT_DIRECTORY": "Root Direcotry",
-  "cleanImage": "Clean Image"
+  "cleanImage": "Clean Image",
+  "web.console.enabled": "web.console.enabled",
+  "web.console.username": "web.console.username",
+  "web.console.password": "web.console.password"
 }

@@ -28,28 +28,6 @@ services:
       options:
         tag: "harbor.log"
   {{- end }}
-  {{- if eq $nodeRole "storage" }}
-  storage:
-    image: erichough/nfs-server:2.2.1
-    container_name: nfs-server
-    restart: always
-    privileged: true
-    volumes:
-      - /data/registry:/registry:rw
-      - ./nfs-server/exports:/etc/exports:ro
-    networks:
-      - harbor
-    ports:
-      - 111:111
-      - 2049:2049
-      - 32765:32765
-      - 32767:32767
-    logging:
-      driver: "syslog"
-      options:
-        syslog-address: "tcp://log:1514"
-        tag: "storage.nfs"
-  {{- end }}
   {{- if eq $nodeRole "cache" }}
   redis:
     image: goharbor/redis-photon:\$HARBOR_VERSION
