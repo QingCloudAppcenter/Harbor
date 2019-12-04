@@ -73,7 +73,7 @@
   "err_code11": "此次升级需要备份数据库，请预留数据库节点 67% 以上的硬盘空间",
   "cleanImage": "清理镜像",
   "The reset pwd command for harbor": "重置登陆密码为Harbor12345",
-  "run_command": "执行命令",
+  "run_command": "执行命令:重置admin密码",
   "command": "命令",
   "Custom service configuration properties": "更多自定义操作",
   "web.console.enabled": "在线日志获取开关",

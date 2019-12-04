@@ -27,7 +27,9 @@ ensureRegistryMounted() {
     mount $mountSrc $clientMountPath
     touch $clientMountPath && log Successfully mounted!
   fi
+  if [[ "$MY_ROLE" =~ ^(job)$ ]]; then 
   mount  ${LOG_NODE_IP}:/var/log/harbor/job_logs    /data/job_logs 
+  fi
 }
 
 ensureNfsModulesLoaded() {
@@ -56,6 +58,8 @@ initNode() {
 initCluster() {
   if [ "$MY_ROLE" = "log" ]; then
     rm -rf /var/log/harbor/lost+found
+    mkdir -p /var/log/harbor/job_logs
+    chown 10000.10000 /var/log/harbor/job_logs
     ln -s -f /opt/app/conf/log/logrotate.conf  /etc/logrotate.d/joblogs.conf
     ln -s -f /opt/app/conf/nfs-server/exports /etc/exports
   fi
@@ -188,7 +192,7 @@ check() {
 }
 
 resetAdminPwd() {
-  [[ -n "/data/database/app-1.2.0/resetAdminPwd.sh" ]] || { 
+  [[ -f "/data/database/app-1.2.0/resetAdminPwd.sh" ]] || { 
     cp /opt/app/bin/node/resetAdminPwd.sh /data/database/app-1.2.0/resetAdminPwd.sh
     }
   docker exec -i  db sh -c "/var/lib/postgresql/data/resetAdminPwd.sh"
