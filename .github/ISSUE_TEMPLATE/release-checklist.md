@@ -28,6 +28,7 @@ assignees: ''
 - [ ] TCP keepalive timeout（基础网络）
 - [ ] 支持 NeonSAN（硬盘类型 5 和 6）
 - [ ] 支持新实例类型（101，201，301）
+- [ ] update document
 
 # 服务功能测试
 
@@ -36,12 +37,18 @@ assignees: ''
 - [ ] confd升级到最新版本
 - [ ] 通过浏览器查看服务日志
 - [ ] 日志轮转
+- [ ] docker push/pull
+- [ ] http/https
+- [ ] harbor delete/tag image/repository/project, check local/qingstor storage, (垃圾清理成功之后才会真正删除，web->任务->垃圾清理）
+- [ ] helm upload download delete(检查项类似于image, 检查存储)
+- [ ] project user group tag tag保留  robot webhook
+- [ ] 镜像复制(local <--> 对象存储)
+- [ ] 配置管理-->认证模式LDAP 项目定额
 
 # 集群功能测试
 
 ## 创建
-- [ ] 创建单个节点的集群
-- [ ] 创建多个节点的集群
+- [ ] 创建默认配置的集群
 - [ ] 创建常用硬件配置的集群
 - [ ] 修改常用配置参数，创建集群
 
