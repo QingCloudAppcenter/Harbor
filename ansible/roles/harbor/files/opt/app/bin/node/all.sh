@@ -50,9 +50,14 @@ initNode() {
   if [ "$MY_ROLE" = "log" ]; then
     echo 'ubuntu:p12cHANgepwD' | chpasswd
     deluser ubuntu sudo || log Already removed user ubuntu from sudo.
+    ln -s -f /opt/app/conf/log/logrotate.conf  /etc/logrotate.d/joblogs.conf
+    ln -s -f /opt/app/conf/nfs-server/exports /etc/exports
   fi
 
-  if [ "$MY_ROLE" = "storage" ]; then ensureNfsModulesLoaded; fi
+  if [ "$MY_ROLE" = "storage" ]; then 
+    ensureNfsModulesLoaded; 
+    ln -s -f /opt/app/conf/nfs-server/exports /etc/exports
+  fi
 }
 
 initCluster() {
@@ -60,8 +65,6 @@ initCluster() {
     rm -rf /var/log/harbor/lost+found
     mkdir -p /var/log/harbor/job_logs
     chown 10000.10000 /var/log/harbor/job_logs
-    ln -s -f /opt/app/conf/log/logrotate.conf  /etc/logrotate.d/joblogs.conf
-    ln -s -f /opt/app/conf/nfs-server/exports /etc/exports
   fi
 
   if [ "$MY_ROLE" = "storage" ]; then
@@ -70,7 +73,6 @@ initCluster() {
 
     # Allow clients write files
     chmod -R 777 $serverMountPath
-    ln -s -f /opt/app/conf/nfs-server/exports /etc/exports
   fi
 
   if [ "$MY_ROLE" = "db" ]; then
