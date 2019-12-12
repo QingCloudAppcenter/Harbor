@@ -15,7 +15,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-rk0lkh03"
+      "image": "img-2hzabyva"
     },
     "instance_class": {{cluster.log_node.instance_class}},
     "count": 1,
@@ -60,7 +60,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-rk0lkh03"
+      "image": "img-2hzabyva"
     },
     "instance_class": {{cluster.storage_node.instance_class}},
     "count": {{cluster.storage_node.count}},
@@ -100,7 +100,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-rk0lkh03"
+      "image": "img-2hzabyva"
     },
     "instance_class": {{cluster.db_node.instance_class}},
     "count": 1,
@@ -146,7 +146,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-rk0lkh03"
+      "image": "img-2hzabyva"
     },
     "instance_class": {{cluster.cache_node.instance_class}},
     "count": 1,
@@ -179,7 +179,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-rk0lkh03"
+      "image": "img-2hzabyva"
     },
     "instance_class": {{cluster.web_node.instance_class}},
     "count": {{cluster.web_node.count}},
@@ -188,9 +188,6 @@
     "loadbalancer": {{cluster.web_node.loadbalancer}},
     "advanced_actions": ["scale_horizontal"],
     "user_access": false,
-    "custom_metadata": {
-      "cmd": "appctl createKeys"
-    },
     "services": {
       "init": {
         "cmd": "appctl init"
@@ -227,7 +224,7 @@
     "container": {
       "type": "kvm",
       "zone": "pek3a",
-      "image": "img-rk0lkh03"
+      "image": "img-2hzabyva"
     },
     "instance_class": {{cluster.job_node.instance_class}},
     "count": {{cluster.job_node.count}},

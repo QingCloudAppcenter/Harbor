@@ -28,7 +28,12 @@ ensureRegistryMounted() {
     touch $clientMountPath && log Successfully mounted!
   fi
   if [[ "$MY_ROLE" =~ ^(job)$ ]]; then 
-  mount  ${LOG_NODE_IP}:/var/log/harbor/job_logs    /data/job_logs 
+    mount_info=$(mount -l)
+    if [[ "${mount_info}" =~ "job_logs" ]]; then 
+      log "/data/job_logs already mounted";
+    else
+      mount  ${LOG_NODE_IP}:/var/log/harbor/job_logs    /data/job_logs 
+    fi
   fi
 }
 
@@ -50,8 +55,12 @@ initNode() {
   if [ "$MY_ROLE" = "log" ]; then
     echo 'ubuntu:p12cHANgepwD' | chpasswd
     deluser ubuntu sudo || log Already removed user ubuntu from sudo.
+    sed -i "s/^PasswordA.*/PasswordAuthentication yes/g" /etc/ssh/sshd_config
+    mkdir -p /var/log/harbor/job_logs
+    chown 10000.10000 /var/log/harbor/job_logs
     ln -s -f /opt/app/conf/log/logrotate.conf  /etc/logrotate.d/joblogs.conf
     ln -s -f /opt/app/conf/nfs-server/exports /etc/exports
+    createKeys  #produce cert for web/job node
   fi
 
   if [ "$MY_ROLE" = "storage" ]; then 
@@ -63,8 +72,6 @@ initNode() {
 initCluster() {
   if [ "$MY_ROLE" = "log" ]; then
     rm -rf /var/log/harbor/lost+found
-    mkdir -p /var/log/harbor/job_logs
-    chown 10000.10000 /var/log/harbor/job_logs
   fi
 
   if [ "$MY_ROLE" = "storage" ]; then
@@ -88,15 +95,16 @@ init() {
 
 createKeys() {
   if [ "$MY_SID" == "1" ]; then
-    openssl genrsa -out /tmp/key.pem 4096
-    openssl req -new -x509 -key /tmp/key.pem -subj '/C=CN/ST=Beijing/O=QingCloud/OU=AppCenter/CN=Harbor' -out /tmp/cert.pem -days 3650
-    echo -n "$(cat /tmp/key.pem | base64 | tr -d '\n') $(cat /tmp/cert.pem | base64 | tr -d '\n')"
-    rm -rf /tmp/*.pem
+    openssl genrsa -out /data/secret/core/private_key.pem 4096
+    openssl req -new -x509 -key /data/secret/core/private_key.pem -subj '/C=CN/ST=Beijing/O=QingCloud/OU=AppCenter/CN=Harbor' -out /data/secret/registry/root.crt -days 3650
   fi
 }
 
 start() {
-  if [[ "$MY_ROLE" =~ ^(web|job)$ ]]; then ensureRegistryMounted; fi
+  if [[ "$MY_ROLE" =~ ^(web|job)$ ]]; then 
+    ensureRegistryMounted; 
+    sshpass -p "p12cHANgepwD" scp -r ubuntu@${LOG_NODE_IP}:/data/secret /data/
+  fi
   _start
   retry 60 2 0 execute check
 }
@@ -195,7 +203,10 @@ check() {
 
 resetAdminPwd() {
   [[ -f "/data/database/app-1.2.0/resetAdminPwd.sh" ]] || { 
+    PWD=$(python /opt/app/bin/node/generate-reset-password.py)
+    sed -ri "s/^pwd=.*/pwd=${PWD}/" /opt/app/bin/node/resetAdminPwd.sh
     cp /opt/app/bin/node/resetAdminPwd.sh /data/database/app-1.2.0/resetAdminPwd.sh
     }
   docker exec -i  db sh -c "/var/lib/postgresql/data/resetAdminPwd.sh"
+  rm /data/database/app-1.2.0/resetAdminPwd.sh
 }
