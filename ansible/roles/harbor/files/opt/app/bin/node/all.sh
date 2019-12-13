@@ -103,7 +103,7 @@ createKeys() {
 start() {
   if [[ "$MY_ROLE" =~ ^(web|job)$ ]]; then 
     ensureRegistryMounted; 
-    sshpass -p "p12cHANgepwD" scp -r ubuntu@${LOG_NODE_IP}:/data/secret /data/
+    sshpass -p "p12cHANgepwD" scp -r -q ubuntu@${LOG_NODE_IP}:/data/secret /data/
   fi
   _start
   retry 60 2 0 execute check
@@ -203,8 +203,6 @@ check() {
 
 resetAdminPwd() {
   [[ -f "/data/database/app-1.2.0/resetAdminPwd.sh" ]] || { 
-    PWD=$(python /opt/app/bin/node/generate-reset-password.py)
-    sed -ri "s/^pwd=.*/pwd=${PWD}/" /opt/app/bin/node/resetAdminPwd.sh
     cp /opt/app/bin/node/resetAdminPwd.sh /data/database/app-1.2.0/resetAdminPwd.sh
     }
   docker exec -i  db sh -c "/var/lib/postgresql/data/resetAdminPwd.sh"

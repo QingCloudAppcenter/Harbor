@@ -159,6 +159,9 @@ services:
       {{- range getvs "/hosts/job_node/*/ip" }}
       - jobservice:{{ . }}
       {{- end }}
+      {{- range getvs "/hosts/job_node/*/ip" }}
+      - clair:{{ . }}
+      {{- end }}
     depends_on:
       - registry
     logging:
@@ -168,6 +171,37 @@ services:
         tag: "{{ $nodeRole }}.core"
   {{- end }}
   {{- if eq $nodeRole "job" }}
+  clair:
+    container_name: clair
+    image: goharbor/clair-photon:v2.1.0-\$HARBOR_VERSION
+    restart: always
+    cap_drop:
+      - ALL
+    cap_add:
+      - DAC_OVERRIDE
+      - SETGID
+      - SETUID
+    networks:
+      - harbor
+    cpu_quota: 50000
+    dns_search: .
+    extra_hosts:
+      - "log:{{ range getvs "/hosts/log_node/*/ip" }}{{ . }}{{ end }}"
+      - "redis:{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }}{{ end }}"
+      - "postgresql:{{ range getvs "/hosts/db_node/*/ip" }}{{ . }}{{ end }}"
+    ports:
+      - 6060:6060
+    volumes:
+      - type: bind
+        source: /opt/app/conf/clair/config.yaml
+        target: /etc/clair/config.yaml
+    env_file:
+      /opt/app/conf/clair/clair_env
+    logging:
+      driver: "syslog"
+      options:
+        syslog-address: "tcp://log:1514"
+        tag: "job.clair"
   jobservice:
     image: goharbor/harbor-jobservice:\$HARBOR_VERSION
     container_name: jobservice
