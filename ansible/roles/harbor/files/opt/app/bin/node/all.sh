@@ -60,7 +60,6 @@ initNode() {
     chown 10000.10000 /var/log/harbor/job_logs
     ln -s -f /opt/app/conf/log/logrotate.conf  /etc/logrotate.d/joblogs.conf
     ln -s -f /opt/app/conf/nfs-server/exports /etc/exports
-    createKeys  #produce cert for web/job node
   fi
 
   if [ "$MY_ROLE" = "storage" ]; then 
@@ -103,7 +102,6 @@ createKeys() {
 start() {
   if [[ "$MY_ROLE" =~ ^(web|job)$ ]]; then 
     ensureRegistryMounted; 
-    sshpass -p "p12cHANgepwD" scp -r -q ubuntu@${LOG_NODE_IP}:/data/secret /data/
   fi
   _start
   retry 60 2 0 execute check
@@ -202,9 +200,8 @@ check() {
 }
 
 resetAdminPwd() {
-  [[ -f "/data/database/app-1.2.0/resetAdminPwd.sh" ]] || { 
-    cp /opt/app/bin/node/resetAdminPwd.sh /data/database/app-1.2.0/resetAdminPwd.sh
-    }
-  docker exec -i  db sh -c "/var/lib/postgresql/data/resetAdminPwd.sh"
-  rm /data/database/app-1.2.0/resetAdminPwd.sh
+#example  
+#password     7055c709338844684a03afd47eb99eaf (1.7.1)  901e944c153438064a68712fef73c2dd (1.9.3)  --> Harbor12345                           
+#salt         7t3s93zk7qhcg7lqx1xm9meega26ryte          ne4triv6j6f5074ei7q36nbqvd1ow5pz
+  docker exec -i db sh -c "psql -U postgres -d registry -c \"update harbor_user set password='ad07ad1d21fa0b43e48320256db73749',salt='2t5pyybr2mgtz6odecfbfdauh9637p6q',password_version='sha256' where username='admin';\""
 }
