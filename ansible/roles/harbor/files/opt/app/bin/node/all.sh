@@ -55,7 +55,6 @@ initNode() {
   if [ "$MY_ROLE" = "log" ]; then
     echo 'ubuntu:p12cHANgepwD' | chpasswd
     deluser ubuntu sudo || log Already removed user ubuntu from sudo.
-    sed -i "s/^PasswordA.*/PasswordAuthentication yes/g" /etc/ssh/sshd_config
     mkdir -p /var/log/harbor/job_logs
     chown 10000.10000 /var/log/harbor/job_logs
     ln -s -f /opt/app/conf/log/logrotate.conf  /etc/logrotate.d/joblogs.conf
@@ -195,7 +194,15 @@ checkServices() {
 check() {
   _check
   if [ "$MY_ROLE" != "storage" ]; then
-  checkServices
+    checkServices
+  fi
+  if [[ "$MY_ROLE" =~ ^(web|job)$ ]]; then 
+    mount_info=$(mount -l)
+    if [[ "${mount_info}" =~ "registry" ]]; then 
+      log "/data/job_logs already mounted";
+    else
+      return $EC_DEFAULT
+    fi
   fi
 }
 
