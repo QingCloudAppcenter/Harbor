@@ -395,24 +395,6 @@
       }]
     }]
   }, {
-    "key": "service_params",
-    "description": "Custom service configuration properties",
-    "type": "array",
-    "properties": [
-      {
-        "key": "confirm",
-        "label": "confirm",
-        "description": "The user admin's password will be reset to 'Habor12345'; choose 'yes' to continue",
-        "type": "string",
-        "default": "no",
-        "required": "yes",
-        "range": [
-          "yes",
-          "no"
-        ]
-      }
-    ]
-  }, {
     "key": "env",
     "description": "Configuration properties",
     "type": "array",
