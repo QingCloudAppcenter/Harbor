@@ -110,6 +110,7 @@
     owner: root
     group: root
     mode: '644'
+    state: touch
 
 
 - name: prepare directories for Harbor
@@ -190,3 +191,5 @@
     group: root
     mode: '644'
 
+- name: generate key for web/job node
+  sh: appctl createKeys

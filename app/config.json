@@ -400,15 +400,16 @@
     "type": "array",
     "properties": [
       {
-        "key": "cmd",
-        "label": "command",
-        "description": "The reset pwd command for harbor",
+        "key": "confirm",
+        "label": "confirm",
+        "description": "The user admin's password will be reset to 'Habor12345'; choose 'yes' to continue",
         "type": "string",
-        "default": "RESET LOGIN PASSWORD",
+        "default": "no",
+        "required": "yes",
         "range": [
-          "RESET LOGIN PASSWORD"
-        ],
-        "required": "yes"
+          "yes",
+          "no"
+        ]
       }
     ]
   }, {

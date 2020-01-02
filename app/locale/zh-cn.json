@@ -85,5 +85,7 @@
   "Enable web console": "在线日志获取器的开关",
   "enable web console to view and download files": "是否启用日志在线获取功能，默认开启(true)",
   "Admin Password": "caddy 密码",
-  "password of admin web console": "在线日志获取界面的登陆密码"
+  "password of admin web console": "在线日志获取界面的登陆密码",
+  "The user admin's password will be reset to 'Habor12345'; choose 'yes' to continue": "admin 用户的密码将被重置为'Harbor12345',选择'yes'将生效",
+  "confirm": "验证"
 }

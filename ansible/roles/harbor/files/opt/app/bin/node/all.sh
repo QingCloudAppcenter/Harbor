@@ -92,10 +92,8 @@ init() {
 }
 
 createKeys() {
-  if [ "$MY_SID" == "1" ]; then
-    openssl genrsa -out /data/secret/core/private_key.pem 4096
-    openssl req -new -x509 -key /data/secret/core/private_key.pem -subj '/C=CN/ST=Beijing/O=QingCloud/OU=AppCenter/CN=Harbor' -out /data/secret/registry/root.crt -days 3650
-  fi
+  openssl genrsa -out /data/secret/core/private_key.pem 4096
+  openssl req -new -x509 -key /data/secret/core/private_key.pem -subj '/C=CN/ST=Beijing/O=QingCloud/OU=AppCenter/CN=Harbor' -out /data/secret/registry/root.crt -days 3650
 }
 
 start() {
