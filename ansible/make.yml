@@ -7,11 +7,13 @@
   - include_role:
       name: "{{ name }}"
     loop:
-    - app-agent-1.0.0
-    - appctl-1.0.1
+    - disable-apt-jobs-1.0.0
+    - disable-motd-1.0.0
+    - app-agent-1.0.1
+    - appctl-1.0.5
     - arping-1.0.0
-    - caddy-1.0.3
-    - jq-1.0.1
+    - caddy-1.0.6
+    - jq-1.0.3
     - harbor
     loop_control:
       loop_var: name
