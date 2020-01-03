@@ -110,7 +110,7 @@
     owner: root
     group: root
     mode: '644'
-    state: touch
+    state: directory
 
 
 - name: prepare directories for Harbor
@@ -192,4 +192,7 @@
     mode: '644'
 
 - name: generate key for web/job node
-  sh: appctl createKeys
+  shell: |
+      openssl genrsa -out /data/secret/core/private_key.pem 4096
+      openssl req -new -x509 -key /data/secret/core/private_key.pem -subj '/C=CN/ST=Beijing/O=QingCloud/OU=AppCenter/CN=Harbor' -out /data/secret/registry/root.crt -days 3650
+
