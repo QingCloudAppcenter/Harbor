@@ -57,8 +57,8 @@ initNode() {
     deluser ubuntu sudo || log Already removed user ubuntu from sudo.
     mkdir -p /var/log/harbor/job_logs
     chown 10000.10000 /var/log/harbor/job_logs
-    ln -s -f /opt/app/conf/log/logrotate.conf  /etc/logrotate.d/joblogs.conf
-    ln -s -f /opt/app/conf/nfs-server/exports /etc/exports
+    ln -s -f /opt/app/conf/log/logrotate.conf  /etc/logrotate.d/harbor_log.conf
+    ln -s -f /opt/app/conf/nfs-server/exports  /etc/exports
   fi
 
   if [ "$MY_ROLE" = "storage" ]; then 

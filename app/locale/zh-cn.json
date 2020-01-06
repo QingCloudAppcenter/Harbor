@@ -73,7 +73,6 @@
   "QS_ROOT_DIRECTORY": "存储根目录",
   "err_code11": "此次升级需要备份数据库，请预留数据库节点 67% 以上的硬盘空间",
   "cleanImage": "清理镜像",
-  "The reset pwd command for harbor": "重置登陆密码为Harbor12345",
   "run_command": "执行命令:重置admin密码",
   "command": "命令",
   "Custom service configuration properties": "更多自定义操作",
@@ -85,5 +84,7 @@
   "Enable web console": "在线日志获取器的开关",
   "enable web console to view and download files": "是否启用日志在线获取功能，默认开启(true)",
   "Admin Password": "caddy 密码",
-  "password of admin web console": "在线日志获取界面的登陆密码"
+  "password of admin web console": "在线日志获取界面的登陆密码",
+  "newAdminPwd": "新密码",
+  "The password for user admin will be set": "admin 的密码将会被重置为此处的值"
 }

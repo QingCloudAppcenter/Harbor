@@ -138,7 +138,10 @@
       "run_command": {
         "type": "custom",
         "cmd": "appctl resetAdminPwd",
-        "timeout": 1200
+        "timeout": 1200,
+        "service_params": {
+          "cmd": {{service_params.newAdminPwd}}
+        }
       }
     }
   }, {

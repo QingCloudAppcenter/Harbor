@@ -102,7 +102,7 @@
         "label": "CPU",
         "description": "CPUs of each node",
         "type": "integer",
-        "default": 1,
+        "default": 2,
         "range": [
           1,
           2,
@@ -115,7 +115,7 @@
         "label": "Memory",
         "description": "Memory of each node",
         "type": "integer",
-        "default": 1024,
+        "default": 2048,
         "range": [
           1024,
           2048,
@@ -394,6 +394,23 @@
         "required": "yes"
       }]
     }]
+  }, {
+    "key": "service_params",
+    "description": "Custom service configuration properties",
+    "type": "array",
+    "properties": [
+      {
+        "key": "newAdminPwd",
+        "label": "newAdminPwd",
+        "description": "The password for user admin will be set",
+        "type": "string",
+        "default": "Harbor12345",
+        "range": [
+          "Harbor12345"
+        ],
+        "required": "yes"
+      }
+    ]
   }, {
     "key": "env",
     "description": "Configuration properties",
