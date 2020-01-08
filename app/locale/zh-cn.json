@@ -15,7 +15,7 @@
   "loadbalancer": "负载均衡器",
   "Loadbalancer": "负载均衡器",
   "The load balancer for the cluster":"用于 Harbor 服务的负载均衡器",
-  "Choose a loadbalancer with a listener":"选择一个负载均衡器和 80/http 的监听器",
+  "Choose a loadbalancer with a listener":"选择负载均衡器和监听器",
   "CPU": "CPU",
   "CPUs of each node": "每个节点的 CPU 数量",
   "Memory": "内存",
