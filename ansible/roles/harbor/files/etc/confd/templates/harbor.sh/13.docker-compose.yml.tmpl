@@ -159,6 +159,10 @@ services:
       {{- range getvs "/hosts/job_node/*/ip" }}
       - jobservice:{{ . }}
       {{- end }}
+      {{- if eq $nodeRole "job" }}
+      {{- $webip := getvs "/hosts/web_node/*/ip" }}
+      - chartmuseum:{{ range $i, $ip := $webip }}{{ if eq $i 0 }}{{ $ip }}{{- end }}{{- end }}
+      {{- end }}
       {{- range getvs "/hosts/job_node/*/ip" }}
       - clair:{{ . }}
       {{- end }}
@@ -225,6 +229,8 @@ services:
     extra_hosts:
       - redis:{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }}{{ end }}
       - postgresql:{{ range getvs "/hosts/db_node/*/ip" }}{{ . }}{{ end }}
+      {{- $webip := getvs "/hosts/web_node/*/ip" }}
+      - chartmuseum:{{ range $i, $ip := $webip }}{{ if eq $i 0 }}{{ $ip }}{{- end }}{{- end }}
     depends_on:
       - core
     logging:
@@ -270,6 +276,8 @@ services:
       - SETUID
     networks:
       - harbor
+    ports:
+      - 9999:9999
     dns_search: .
     extra_hosts:
       - redis:{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }}{{ end }}
