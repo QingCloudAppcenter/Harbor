@@ -159,13 +159,6 @@ services:
       {{- range getvs "/hosts/job_node/*/ip" }}
       - jobservice:{{ . }}
       {{- end }}
-      {{- if eq $nodeRole "job" }}
-      {{- $webip := getvs "/hosts/web_node/*/ip" }}
-      - chartmuseum:{{ range $i, $ip := $webip }}{{ if eq $i 0 }}{{ $ip }}{{- end }}{{- end }}
-      {{- end }}
-      {{- range getvs "/hosts/job_node/*/ip" }}
-      - clair:{{ . }}
-      {{- end }}
     depends_on:
       - registry
     logging:
@@ -173,6 +166,35 @@ services:
       options:
         syslog-address: "tcp://log:1514"
         tag: "{{ $nodeRole }}.core"
+  chartmuseum:
+    container_name: chartmuseum
+    image: goharbor/chartmuseum-photon:v0.9.0-\$HARBOR_VERSION
+    env_file:
+      ./chartserver/env
+    restart: always
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - SETGID
+      - SETUID
+    networks:
+      - harbor
+    dns_search: .
+    extra_hosts:
+      - redis:{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }}{{ end }}
+    volumes:
+      {{- if len (ls "/hosts/storage_node") }}
+      - /data/registry:/chart_storage:z
+      {{- end }}
+      - ./chartserver/docker-entrypoint.sh:/docker-entrypoint.sh:z
+      - ./chartserver:/etc/chartserver:z
+    logging:
+      driver: "syslog"
+      options:
+        syslog-address: "tcp://log:1514"
+        tag: "{{ $nodeRole }}.chartmuseum"
   {{- end }}
   {{- if eq $nodeRole "job" }}
   clair:
@@ -193,8 +215,6 @@ services:
       - "log:{{ range getvs "/hosts/log_node/*/ip" }}{{ . }}{{ end }}"
       - "redis:{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }}{{ end }}"
       - "postgresql:{{ range getvs "/hosts/db_node/*/ip" }}{{ . }}{{ end }}"
-    ports:
-      - 6060:6060
     volumes:
       - type: bind
         source: /opt/app/conf/clair/config.yaml
@@ -229,8 +249,6 @@ services:
     extra_hosts:
       - redis:{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }}{{ end }}
       - postgresql:{{ range getvs "/hosts/db_node/*/ip" }}{{ . }}{{ end }}
-      {{- $webip := getvs "/hosts/web_node/*/ip" }}
-      - chartmuseum:{{ range $i, $ip := $webip }}{{ if eq $i 0 }}{{ $ip }}{{- end }}{{- end }}
     depends_on:
       - core
     logging:
@@ -261,37 +279,6 @@ services:
       options:
         syslog-address: "tcp://log:1514"
         tag: "web.portal"
-  chartmuseum:
-    container_name: chartmuseum
-    image: goharbor/chartmuseum-photon:v0.9.0-\$HARBOR_VERSION
-    env_file:
-      ./chartserver/env
-    restart: always
-    cap_drop:
-      - ALL
-    cap_add:
-      - CHOWN
-      - DAC_OVERRIDE
-      - SETGID
-      - SETUID
-    networks:
-      - harbor
-    ports:
-      - 9999:9999
-    dns_search: .
-    extra_hosts:
-      - redis:{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }}{{ end }}
-    volumes:
-      {{- if len (ls "/hosts/storage_node") }}
-      - /data/registry:/chart_storage:z
-      {{- end }}
-      - ./chartserver/docker-entrypoint.sh:/docker-entrypoint.sh:z
-      - ./chartserver:/etc/chartserver:z
-    logging:
-      driver: "syslog"
-      options:
-        syslog-address: "tcp://log:1514"
-        tag: "web.chartmuseum"
   proxy:
     image: goharbor/nginx-photon:\$HARBOR_VERSION
     container_name: nginx
