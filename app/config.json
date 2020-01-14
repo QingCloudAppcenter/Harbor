@@ -412,14 +412,13 @@
       }, {
         "key": "cleanUpFlag",
         "label": "cleanUpFlag",
-        "description": "The ratio of GC log file will be remove",
+        "description": "The retention time of GC log file",
         "type": "string",
-        "default": "100%",
+        "default": "7",
         "range": [
-          "100%",
-          "75%",
-          "50%",
-          "25%"
+          "1",
+          "7",
+          "30"
         ],
         "required": "yes"
       }

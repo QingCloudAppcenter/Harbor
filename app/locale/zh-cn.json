@@ -87,6 +87,6 @@
   "password of admin web console": "在线日志获取界面的登陆密码",
   "newAdminPwd": "新密码",
   "The password for user admin will be set": "admin 的密码将会被重置为此处的值",
-  "The ratio of GC log file will be remove": "垃圾清理功能的日志清除比例,将会按照以时间先后顺序按此处选择的比例进行清除",
-  "cleanUpFlag": "清除比例"
+  "The retention time of GC log file": "垃圾清理功能的日志保留时间,将会按照以时间先后顺序按选择的时间段保留",
+  "cleanUpFlag": "保留时间 days"
 }
