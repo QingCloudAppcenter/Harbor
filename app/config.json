@@ -409,6 +409,19 @@
           "Harbor12345"
         ],
         "required": "yes"
+      }, {
+        "key": "cleanUpFlag",
+        "label": "cleanUpFlag",
+        "description": "The ratio of GC log file will be remove",
+        "type": "string",
+        "default": "100%",
+        "range": [
+          "100%",
+          "75%",
+          "50%",
+          "25%"
+        ],
+        "required": "yes"
       }
     ]
   }, {

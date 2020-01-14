@@ -215,3 +215,16 @@ resetAdminPwd() {
 #salt         7t3s93zk7qhcg7lqx1xm9meega26ryte          ne4triv6j6f5074ei7q36nbqvd1ow5pz
   docker exec -i db sh -c "psql -U postgres -d registry -c \"update harbor_user set password='ad07ad1d21fa0b43e48320256db73749',salt='2t5pyybr2mgtz6odecfbfdauh9637p6q',password_version='sha256' where username='admin';\""
 }
+
+cleanUpGClog() {
+  local ratioOfCleanUp=$(echo ${1:-\"0\"\"0\"} | cut -d\" -f4);
+  local totalNum=$(ls -1 /var/log/harbor/job_logs | wc -l );
+  local rmFileNum=$((${totalNum}*${ratioOfCleanUp%\%*}/100));
+  local flag=1
+  for i in $(ls -rt1 /var/log/harbor/job_logs); do
+    if [ $flag -le $rmFileNum ]; then
+      rm "/var/log/harbor/job_logs/"$i;
+    fi
+    flag=$(($flag+1))
+  done
+}
