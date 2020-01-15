@@ -175,7 +175,7 @@
     masked: yes
     state: stopped
 
-- name: Give insecure permissions to logrotate
+- name: Give secure permissions to logrotate
   file:
     path: /opt/app/conf/log/logrotate.conf
     owner: root

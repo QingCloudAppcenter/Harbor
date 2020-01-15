@@ -318,7 +318,7 @@ volumes:
       o: addr={{ range getvs "/hosts/storage_node/*/ip" }}{{ . }}{{ end }},rw
       device: ":/data/registry"
   {{- else }}
-      type: local
+      type: volume
       source: /data/registry
       target: /data/registry
   {{- end }}
