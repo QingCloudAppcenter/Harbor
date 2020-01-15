@@ -28,7 +28,7 @@
 - name: install tools
   apt:
     update_cache: yes
-    name: ['nfs-common', 'python3-pip', "nfs-kernel-server", "sshpass"]
+    name: ['nfs-common', 'python3-pip', "nfs-kernel-server"]
     state: present
 
 - name: install docker-py

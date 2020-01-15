@@ -194,19 +194,6 @@ check() {
   if [ "$MY_ROLE" != "storage" ]; then
     checkServices
   fi
-  if [[ "$MY_ROLE" =~ ^(web|job)$ ]] && [ $STORAGE_NODE_IP ]; then 
-    local mount_info=$(mount -l)
-    if [[ "${mount_info}" =~ "registry" ]]; then
-      if [ -d "/data/registry/docker/registry/v2/blobs" ]; then
-        local d=$(docker exec -i core sh -c "ls /data/registry/docker/registry/v2/blobs/sha256")
-        local h=$(ls /data/registry/docker/registry/v2/blobs/sha256)
-        [ "$d" == "$h" ]
-      fi
-      log "/data/job_logs already mounted";
-    else
-      return $EC_DEFAULT
-    fi
-  fi
 }
 
 resetAdminPwd() {
@@ -216,15 +203,9 @@ resetAdminPwd() {
   docker exec -i db sh -c "psql -U postgres -d registry -c \"update harbor_user set password='ad07ad1d21fa0b43e48320256db73749',salt='2t5pyybr2mgtz6odecfbfdauh9637p6q',password_version='sha256' where username='admin';\""
 }
 
-cleanUpGClog() {
-  local ratioOfCleanUp=$(echo ${1:-\"0\"\"0\"} | cut -d\" -f4);
-  local totalNum=$(ls -1 /var/log/harbor/job_logs | wc -l );
-  local rmFileNum=$((${totalNum}*${ratioOfCleanUp%\%*}/100));
-  local flag=1
-  for i in $(ls -rt1 /var/log/harbor/job_logs); do
-    if [ $flag -le $rmFileNum ]; then
-      rm "/var/log/harbor/job_logs/"$i;
-    fi
-    flag=$(($flag+1))
+cleanJobLogs() {
+  local timeFlag=$(echo $@ | jq -r '.timeOfCleanUp');
+  for i in $(find /var/log/harbor/job_logs -mtime +$timeFlag); do
+    rm $i;
   done
 }
