@@ -105,15 +105,6 @@
     dest: /usr/bin/docker-compose
     mode: 0755
 
-- name: Give insecure permissions to log file
-  file:
-    path: /var/log/harbor
-    owner: root
-    group: root
-    mode: '644'
-    state: directory
-
-
 - name: prepare directories for Harbor
   file:
     path: "{{ item }}"
@@ -128,7 +119,6 @@
     - /data/secret/registry
     - /opt/app/conf/adminserver
     - /opt/app/conf/db
-    - /var/log/harbor/job_logs
 
 - name: protect binaries and configurations
   file:

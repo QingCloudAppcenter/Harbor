@@ -94,7 +94,7 @@ services:
       - SETGID
       - SETUID
     volumes:
-      - /data/registry:/storage:z
+      - dataDir:/storage
       - ./registry/:/etc/registry/:z
       - /data/secret/registry/root.crt:/etc/registry/root.crt:z
     networks:
@@ -120,7 +120,7 @@ services:
       - SETGID
       - SETUID
     volumes:
-      - /data/registry:/storage:z
+      - dataDir:/storage
       - ./registry/:/etc/registry/:z
       - ./registryctl/config.yml:/etc/registryctl/config.yml:z
     networks:
@@ -146,6 +146,7 @@ services:
       - /data/ca_download/:/etc/core/ca/:z
       - /data/psc/:/etc/core/token/:z
       - /data/:/data/:z
+      - dataDir:/data/registry
       - ./core/certificates/:/etc/core/certificates/:z
       - ./core/app.conf:/etc/core/app.conf:z
       - /data/secret/core/private_key.pem:/etc/core/private_key.pem:z
@@ -186,7 +187,7 @@ services:
       - redis:{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }}{{ end }}
     volumes:
       {{- if len (ls "/hosts/storage_node") }}
-      - /data/registry:/chart_storage:z
+      - dataDir:/chart_storage
       {{- end }}
       - ./chartserver/docker-entrypoint.sh:/docker-entrypoint.sh:z
       - ./chartserver:/etc/chartserver:z
@@ -239,7 +240,7 @@ services:
       - SETGID
       - SETUID
     volumes:
-      - /data/job_logs:/var/log/jobs:z
+      - job_logs:/var/log/jobs
       - ./jobservice/config.yml:/etc/jobservice/config.yml:z
     networks:
       - harbor
@@ -307,7 +308,27 @@ services:
         syslog-address: "tcp://log:1514"
         tag: "web.proxy"
   {{- end }}
-
+{{- range getvs "/host/role" | filter "web|job" }}
+volumes:
+  dataDir:
+    driver: local
+    driver_opts:
+  {{- if len (ls "/hosts/storage_node") }}
+      type: nfs
+      o: addr={{ range getvs "/hosts/storage_node/*/ip" }}{{ . }}{{ end }},rw
+      device: ":/data/registry"
+  {{- else }}
+      type: local
+      source: /data/registry
+      target: /data/registry
+  {{- end }}
+  job_logs:
+    driver: local
+    driver_opts:
+      type: nfs
+      o: addr={{ range getvs "/hosts/log_node/*/ip" }}{{ . }}{{ end }},rw
+      device: ":/var/log/harbor/job_logs"
+{{- end }}
 networks:
   harbor:
     external: false

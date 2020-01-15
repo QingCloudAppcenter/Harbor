@@ -5,4 +5,4 @@ mode = "0700"
 keys = [
   "/",
 ]
-reload_cmd = "/opt/app/bin/tmpl/harbor.sh; appctl reload storage web job"
+reload_cmd = "/opt/app/bin/tmpl/harbor.sh; appctl reload storage web job log"

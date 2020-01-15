@@ -16,17 +16,8 @@ EC_UPDATE_DB_PWD_START=23 # upgrade failure: DB container failed to start
 EC_UPDATE_DB_PWD_RUN=24 # upgrade failure: DB update to random super password
 EC_UPDATE_DB_PWD_STOP=25 # upgrade failure: DB remove the container
 
-clientMountPath=/data/registry
-ensureRegistryMounted() {
-  [[ -n "$STORAGE_NODE_IP" ]] || return 0
 
-  if ! grep -qs "$clientMountPath " /proc/mounts; then
-    local mountSrc="$STORAGE_NODE_IP:/data/registry"
-    log "Mounting '$mountSrc' for registry ..."
-    mkdir -p $clientMountPath
-    mount $mountSrc $clientMountPath
-    touch $clientMountPath && log Successfully mounted!
-  fi
+ensureRegistryMounted() {
   if [[ "$MY_ROLE" =~ ^(job)$ ]]; then 
     mount_info=$(mount -l)
     if [[ "${mount_info}" =~ "job_logs" ]]; then 
@@ -51,12 +42,12 @@ dbMountDir=/data/database
 dbDataDir=$dbMountDir/app-1.2.0
 initNode() {
   _initNode
-
+  mkdir -p /data/registry
   if [ "$MY_ROLE" = "log" ]; then
     echo 'ubuntu:p12cHANgepwD' | chpasswd
     deluser ubuntu sudo || log Already removed user ubuntu from sudo.
     mkdir -p /var/log/harbor/job_logs
-    chown 10000.10000 /var/log/harbor/job_logs
+    chown -R 10000.10000 /var/log/harbor
     ln -s -f /opt/app/conf/log/logrotate.conf  /etc/logrotate.d/harbor_log.conf
     ln -s -f /opt/app/conf/nfs-server/exports  /etc/exports
   fi
