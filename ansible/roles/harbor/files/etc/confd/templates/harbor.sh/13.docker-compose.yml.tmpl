@@ -318,16 +318,18 @@ volumes:
       o: addr={{ range getvs "/hosts/storage_node/*/ip" }}{{ . }}{{ end }},rw
       device: ":/data/registry"
   {{- else }}
-      type: volume
-      source: /data/registry
-      target: /data/registry
+      type: none
+      device: /data/registry
+      o: bind
   {{- end }}
+  {{- if eq $nodeRole "job" }}
   job_logs:
     driver: local
     driver_opts:
       type: nfs
       o: addr={{ range getvs "/hosts/log_node/*/ip" }}{{ . }}{{ end }},rw
       device: ":/var/log/harbor/job_logs"
+  {{- end }}
 {{- end }}
 networks:
   harbor:

@@ -17,17 +17,6 @@ EC_UPDATE_DB_PWD_RUN=24 # upgrade failure: DB update to random super password
 EC_UPDATE_DB_PWD_STOP=25 # upgrade failure: DB remove the container
 
 
-ensureRegistryMounted() {
-  if [[ "$MY_ROLE" =~ ^(job)$ ]]; then 
-    mount_info=$(mount -l)
-    if [[ "${mount_info}" =~ "job_logs" ]]; then 
-      log "/data/job_logs already mounted";
-    else
-      mount  ${LOG_NODE_IP}:/var/log/harbor/job_logs    /data/job_logs 
-    fi
-  fi
-}
-
 ensureNfsModulesLoaded() {
   modprobe nfs
   modprobe nfsd
@@ -88,9 +77,6 @@ createKeys() {
 }
 
 start() {
-  if [[ "$MY_ROLE" =~ ^(web|job)$ ]]; then 
-    ensureRegistryMounted; 
-  fi
   _start
   retry 60 2 0 execute check
 }
