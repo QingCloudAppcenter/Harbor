@@ -413,13 +413,11 @@
         "key": "cleanUpFlag",
         "label": "cleanUpFlag",
         "description": "The retention time of GC log file",
-        "type": "string",
-        "default": "7",
-        "range": [
-          "1",
-          "7",
-          "30"
-        ],
+        "type": "integer",
+        "default": 7,
+        "changeable": true,
+        "min": 0,
+        "max": 365,
         "required": "yes"
       }
     ]

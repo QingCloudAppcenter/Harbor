@@ -88,5 +88,5 @@
   "newAdminPwd": "新密码",
   "The password for user admin will be set": "admin 的密码将会被重置为此处的值",
   "The retention time of GC log file": "垃圾清理功能的日志保留时间,将会按照以时间先后顺序按选择的时间段保留",
-  "cleanUpFlag": "保留时间 days"
+  "cleanUpFlag": "保留时间 (单位:days)"
 }

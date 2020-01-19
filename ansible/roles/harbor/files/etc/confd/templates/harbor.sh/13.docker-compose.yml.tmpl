@@ -240,7 +240,7 @@ services:
       - SETGID
       - SETUID
     volumes:
-      - job_logs:/var/log/jobs
+      - jobLogs:/var/log/jobs
       - ./jobservice/config.yml:/etc/jobservice/config.yml:z
     networks:
       - harbor
@@ -314,7 +314,7 @@ volumes:
     driver: local
     driver_opts:
   {{- if len (ls "/hosts/storage_node") }}
-      type: nfs
+      type: nfs4
       o: addr={{ range getvs "/hosts/storage_node/*/ip" }}{{ . }}{{ end }},rw
       device: ":/data/registry"
   {{- else }}
@@ -323,12 +323,12 @@ volumes:
       o: bind
   {{- end }}
   {{- if eq $nodeRole "job" }}
-  job_logs:
+  jobLogs:
     driver: local
     driver_opts:
-      type: nfs
+      type: nfs4
       o: addr={{ range getvs "/hosts/log_node/*/ip" }}{{ . }}{{ end }},rw
-      device: ":/var/log/harbor/job_logs"
+      device: ":/var/log/harbor/jobLogs"
   {{- end }}
 {{- end }}
 networks:

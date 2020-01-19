@@ -35,7 +35,7 @@ initNode() {
   if [ "$MY_ROLE" = "log" ]; then
     echo 'ubuntu:p12cHANgepwD' | chpasswd
     deluser ubuntu sudo || log Already removed user ubuntu from sudo.
-    mkdir -p /var/log/harbor/job_logs
+    mkdir -p /var/log/harbor/jobLogs
     chown -R 10000.10000 /var/log/harbor
     ln -s -f /opt/app/conf/log/logrotate.conf  /etc/logrotate.d/harbor_log.conf
     ln -s -f /opt/app/conf/nfs-server/exports  /etc/exports
@@ -181,8 +181,6 @@ resetAdminPwd() {
 }
 
 cleanJobLogs() {
-  local timeFlag=$(echo $@ | jq -r '.timeOfCleanUp');
-  for i in $(find /var/log/harbor/job_logs -mtime +$timeFlag); do
-    rm $i;
-  done
+  local timeFlag=$(echo $@ | jq -r '.jobLogsDuration');
+  find /var/log/harbor/jobLogs -mtime +$timeFlag -type f -delete
 }

@@ -10,7 +10,7 @@
     - disable-apt-jobs-1.0.0
     - disable-motd-1.0.0
     - app-agent-1.0.1
-    - appctl-1.0.5
+    - appctl-1.0.7
     - arping-1.0.0
     - caddy-1.0.6
     - jq-1.0.3
