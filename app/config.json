@@ -410,9 +410,9 @@
         ],
         "required": "yes"
       }, {
-        "key": "cleanUpFlag",
-        "label": "cleanUpFlag",
-        "description": "The retention time of GC log file",
+        "key": "daysToKeep",
+        "label": "daysToKeep",
+        "description": "The retention time of job log file",
         "type": "integer",
         "default": 7,
         "changeable": true,
