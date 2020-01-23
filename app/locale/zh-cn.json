@@ -87,6 +87,6 @@
   "password of admin web console": "文件查看器登陆密码",
   "newAdminPwd": "新密码",
   "The password for user admin will be set": "admin 的密码将会被重置为此处的值",
-  "The retention time of job log file": "任务日志保留时间,将会按照时间顺序删除保留时间以外的日志文件",
+  "The retention time of job log file": "任务日志保留时间，超过此天数的文件将被清理；比如填 7 表示只保留最近 7 天的文件，更老的文件将被永久删除",
   "daysToKeep": "保留天数"
 }
