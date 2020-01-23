@@ -1,0 +1,188 @@
+---
+- name: set vars
+  set_fact:
+    harbor_version: v1.9.3
+    containerd_version: 1.2.6-3
+    docker_version: 19.03.5~3
+    docker_compose_version: 1.25.0
+
+- name: install confd files
+  include_role:
+    name: confd-files-1.0.1
+
+- name: copy binaries
+  copy:
+    src: "{{ role_path }}/files/opt/app/"
+    dest: /opt/app/
+    owner: root
+    group: svc
+    mode: preserve
+    directory_mode: u=rwx,g=rx,o=
+
+- name: set up harbor env
+  copy:
+    dest: /opt/app/bin/envs/harbor.env
+    content: |
+      HARBOR_VERSION={{ harbor_version }}
+
+- name: install tools
+  apt:
+    update_cache: yes
+    name: ['nfs-common', 'python3-pip', "nfs-kernel-server"]
+    state: present
+
+- name: install docker-py
+  pip:
+    name: ['docker-py']
+
+- name: Download reusable containerd binaries locally
+  get_url:
+    url: "https://download.docker.com/linux/ubuntu/dists/xenial/pool/stable/amd64/containerd.io_{{ containerd_version }}_amd64.deb"
+    dest: "{{ role_path }}/files/tmp/containerd-{{ containerd_version }}.deb"
+  delegate_to: localhost
+
+- name: Download reusable Docker CE CLI binaries locally
+  get_url:
+    url: "https://download.docker.com/linux/ubuntu/dists/xenial/pool/stable/amd64/docker-ce-cli_{{ docker_version }}-0~ubuntu-xenial_amd64.deb"
+    dest: "{{ role_path }}/files/tmp/docker-ce-cli-{{ docker_version }}.deb"
+  delegate_to: localhost
+
+- name: Download reusable Docker CE binaries locally
+  get_url:
+    url: "https://download.docker.com/linux/ubuntu/dists/xenial/pool/stable/amd64/docker-ce_{{ docker_version }}-0~ubuntu-xenial_amd64.deb"
+    dest: "{{ role_path }}/files/tmp/docker-ce-{{ docker_version }}.deb"
+  delegate_to: localhost
+
+- name: Copy Docker binaries
+  copy:
+    src: "{{ role_path }}/files/tmp/{{ item }}"
+    dest: "/tmp/{{ item }}"
+  with_items:
+    - "containerd-{{ containerd_version }}.deb"
+    - "docker-ce-cli-{{ docker_version }}.deb"
+    - "docker-ce-{{ docker_version }}.deb"
+
+- name: Install Docker
+  apt:
+    deb: "/tmp/{{ item }}.deb"
+    state: present
+  with_items:
+    - "containerd-{{ containerd_version }}"
+    - "docker-ce-cli-{{ docker_version }}"
+    - "docker-ce-{{ docker_version }}"
+
+- name: Pull Docker Images
+  # retries: 3
+  # delay: 3
+  docker_image:
+    name: "{{ item }}"
+    source: pull
+  with_items:
+    - "vmware/harbor-db-migrator:1.3"
+    - "goharbor/harbor-migrator:v1.6.0"
+    - "goharbor/redis-photon:{{ harbor_version }}"
+    - "goharbor/harbor-registryctl:{{ harbor_version }}"
+    - "goharbor/registry-photon:v2.7.1-patch-2819-2553-{{ harbor_version }}"
+    - "goharbor/nginx-photon:{{ harbor_version }}"
+    - "goharbor/harbor-log:{{ harbor_version }}"
+    - "goharbor/harbor-jobservice:{{ harbor_version }}"
+    - "goharbor/harbor-core:{{ harbor_version }}"
+    - "goharbor/harbor-portal:{{ harbor_version }}"
+    - "goharbor/harbor-db:{{ harbor_version }}"
+    - "goharbor/chartmuseum-photon:v0.9.0-{{ harbor_version }}"
+    - "goharbor/clair-photon:v2.1.0-{{ harbor_version }}"
+
+
+- name: Download reusable Docker Compose binaries locally
+  get_url:
+    url: "https://github.com/docker/compose/releases/download/{{ docker_compose_version }}/docker-compose-Linux-x86_64"
+    dest: "{{ role_path }}/files/tmp/docker-compose-{{ docker_compose_version }}"
+  delegate_to: localhost
+
+- name: Copy Docker Compose binary
+  copy:
+    src: "{{ role_path }}/files/tmp/docker-compose-{{ docker_compose_version }}"
+    dest: /usr/bin/docker-compose
+    mode: 0755
+
+- name: prepare directories for Harbor
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: 10000
+    group: 10000
+  with_items:
+    - /data/redis
+    - /data/secret/core
+    - /data/secret/keys
+    - /data/secret/registry
+    - /opt/app/conf/adminserver
+    - /opt/app/conf/db
+
+- name: protect binaries and configurations
+  file:
+    path: /opt/app/conf/{{ item }}
+    mode: u=rwx,g=rx,o=
+    owner: 0
+    group: 10000
+    recurse: yes
+  with_items:
+    - chartserver
+    - core
+    - db
+    - jobservice
+    - log
+    - nginx
+    - registry
+    - registryctl
+
+- name: fix permission issue
+  file:
+    path: /{{ file_path }}
+    owner: 999
+    group: 999
+    recurse: yes
+  loop:
+    - /opt/app/conf/redis/
+    - /data/redis/
+  loop_control:
+    loop_var: file_path
+
+- name: install harbor service
+  copy:
+    src: "{{ role_path }}/files/{{ file_path }}"
+    dest: /{{ file_path }}
+    owner: root
+    group: root
+    mode: preserve
+  loop:
+    - lib/systemd/system/
+  loop_control:
+    loop_var: file_path
+
+- name: mask harbor service
+  systemd:
+    name: harbor
+    enabled: no
+    masked: yes
+    state: stopped
+
+- name: mask nfs service
+  systemd:
+    name: nfs-server
+    enabled: no
+    masked: yes
+    state: stopped
+
+- name: Give secure permissions to logrotate
+  file:
+    path: /opt/app/conf/log/logrotate.conf
+    owner: root
+    group: root
+    mode: '644'
+
+- name: generate key for web/job node
+  shell: |
+      openssl genrsa -out /data/secret/core/private_key.pem 4096
+      openssl req -new -x509 -key /data/secret/core/private_key.pem -subj '/C=CN/ST=Beijing/O=QingCloud/OU=AppCenter/CN=Harbor' -out /data/secret/registry/root.crt -days 3650
+

@@ -1,0 +1,8 @@
+[template]
+src = "harbor.sh.tmpl"
+dest = "/opt/app/bin/tmpl/harbor.sh"
+mode = "0700"
+keys = [
+  "/",
+]
+reload_cmd = "/opt/app/bin/tmpl/harbor.sh; appctl reload storage web job log"

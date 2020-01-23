@@ -1,0 +1,17 @@
+{{- if eq $nodeRole "cache" }}
+encrypted=$(echo -n {{ getv "/cluster/user_id" }}{{ getv "/cluster/global_uuid" }} | sha256sum | base64)
+
+flush > /opt/app/conf/redis/redis.conf << REDIS_CONF_EOF
+requirepass "${encrypted:0:16}"
+aof-use-rdb-preamble no
+client-output-buffer-limit slave 256mb 64mb 60
+dir /var/lib/redis
+protected-mode no
+slave-lazy-flush no
+slave-priority 100
+slave-read-only yes
+slave-serve-stale-data yes
+aof-rewrite-incremental-fsync yes
+REDIS_CONF_EOF
+
+{{- end }}

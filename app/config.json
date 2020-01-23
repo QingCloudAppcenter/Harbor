@@ -102,7 +102,7 @@
         "label": "CPU",
         "description": "CPUs of each node",
         "type": "integer",
-        "default": 1,
+        "default": 2,
         "range": [
           1,
           2,
@@ -115,7 +115,7 @@
         "label": "Memory",
         "description": "Memory of each node",
         "type": "integer",
-        "default": 1024,
+        "default": 2048,
         "range": [
           1024,
           2048,
@@ -271,7 +271,7 @@
         "label": "Volume Size",
         "description": "The volume size for each instance",
         "type": "integer",
-        "default": 50,
+        "default": 100,
         "min": 10,
         "step": 10,
         "required": "yes"
@@ -301,7 +301,6 @@
         "type": "integer",
         "default": 2048,
         "range": [
-          1024,
           2048,
           4096,
           8192,
@@ -396,6 +395,33 @@
       }]
     }]
   }, {
+    "key": "service_params",
+    "description": "Custom service configuration properties",
+    "type": "array",
+    "properties": [
+      {
+        "key": "newAdminPwd",
+        "label": "newAdminPwd",
+        "description": "The password for user admin will be set",
+        "type": "string",
+        "default": "Harbor12345",
+        "range": [
+          "Harbor12345"
+        ],
+        "required": "yes"
+      }, {
+        "key": "daysToKeep",
+        "label": "daysToKeep",
+        "description": "The retention time of job log file",
+        "type": "integer",
+        "default": 7,
+        "changeable": true,
+        "min": 0,
+        "max": 365,
+        "required": "yes"
+      }
+    ]
+  }, {
     "key": "env",
     "description": "Configuration properties",
     "type": "array",
@@ -463,6 +489,29 @@
       "type": "boolean",
       "changeable": true,
       "default": false,
+      "required": "no"
+    }, {
+      "key": "web.console.enabled",
+      "label": "Enable web console",
+      "description": "enable web console to view and download files",
+      "type": "boolean",
+      "default": true,
+      "required": "no"
+    }, {
+      "key": "web.console.username",
+      "label": "Admin Username",
+      "description": "username of admin web console",
+      "type": "string",
+      "pattern": "^([a-z0-9.-]+)?$",
+      "default": "admin",
+      "required": "no"
+    }, {
+      "key": "web.console.password",
+      "label": "Admin Password",
+      "description": "password of admin web console",
+      "type": "password",
+      "pattern": "^\\w{0,24}$",
+      "default": "",
       "required": "no"
     }]
   }]

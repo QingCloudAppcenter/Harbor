@@ -1,0 +1,42 @@
+{{- if eq $nodeRole "job" }}
+
+encrypted=$(echo -n {{ getv "/cluster/user_id" }}{{ getv "/cluster/global_uuid" }} | sha256sum | base64)
+dbPassword=${encrypted:16:16}
+
+flush > /opt/app/conf/clair/config.yaml <<CLAIR_CONFIG_EOF
+clair:
+  database:
+    type: pgsql
+    options:
+      source: postgresql://postgres:$dbPassword@postgresql:5432/postgres?sslmode=disable
+
+      # Number of elements kept in the cache
+      # Values unlikely to change (e.g. namespaces) are cached in order to save prevent needless roundtrips to the database.
+      cachesize: 16384
+
+  api:
+    # API server port
+    port: 6060
+    healthport: 6061
+
+    # Deadline before an API request will respond with a 503
+    timeout: 300s
+  updater:
+    interval: 12h
+
+  notifier:
+    attempts: 3
+    renotifyinterval: 2h
+    http:
+      endpoint: http://core:8080/service/notifications/clair
+
+
+CLAIR_CONFIG_EOF
+
+flush > /opt/app/conf/clair/postgres_env <<CLAIR_POSTGRES_EOF
+POSTGRES_PASSWORD=$dbPassword
+
+CLAIR_POSTGRES_EOF
+
+
+{{- end }}
