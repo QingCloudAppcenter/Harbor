@@ -183,8 +183,8 @@ resetAdminPwd() {
 cleanJobLogs() {
   local timeFlag=$(echo $@ | jq -r '.jobLogsDuration');
   if [[ "$timeFlag" != "0" ]]; then
-    find /var/log/harbor/jobLogs -mtime +$[timeFlag - 1] -type f -delete
+    find /var/log/harbor/job-logs -mtime +$[timeFlag - 1] -type f -delete
   else
-    rm  /var/log/harbor/jobLogs/*
+    find /var/log/harbor/job-logs -type f -delete
   fi
 }
