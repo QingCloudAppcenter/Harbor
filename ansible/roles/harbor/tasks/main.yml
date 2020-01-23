@@ -112,7 +112,6 @@
     owner: 10000
     group: 10000
   with_items:
-    - /data/job_logs
     - /data/redis
     - /data/secret/core
     - /data/secret/keys

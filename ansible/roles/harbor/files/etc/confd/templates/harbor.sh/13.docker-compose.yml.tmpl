@@ -328,7 +328,7 @@ volumes:
     driver_opts:
       type: nfs4
       o: addr={{ range getvs "/hosts/log_node/*/ip" }}{{ . }}{{ end }},rw
-      device: ":/var/log/harbor/jobLogs"
+      device: ":/var/log/harbor/job-logs"
   {{- end }}
 {{- end }}
 networks:

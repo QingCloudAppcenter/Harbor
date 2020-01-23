@@ -35,9 +35,9 @@ initNode() {
   if [ "$MY_ROLE" = "log" ]; then
     echo 'ubuntu:p12cHANgepwD' | chpasswd
     deluser ubuntu sudo || log Already removed user ubuntu from sudo.
-    mkdir -p /var/log/harbor/jobLogs
+    mkdir -p /var/log/harbor/job-logs
     chown -R 10000.10000 /var/log/harbor
-    ln -s -f /opt/app/conf/log/logrotate.conf  /etc/logrotate.d/harbor_log.conf
+    ln -s -f /opt/app/conf/log/logrotate.conf  /etc/logrotate.d/harbor-log.conf
     ln -s -f /opt/app/conf/nfs-server/exports  /etc/exports
   fi
 
