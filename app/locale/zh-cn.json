@@ -73,7 +73,7 @@
   "QS_ROOT_DIRECTORY": "存储根目录",
   "err_code11": "此次升级需要备份数据库，请预留数据库节点 67% 以上的硬盘空间",
   "cleanImage": "清理镜像",
-  "run_command": "自定义命令",
+  "resetAdminPwd": "重置 Harbor 密码",
   "command": "命令",
   "Custom service configuration properties": "更多自定义操作",
   "web.console.enabled": "文件查看器开关",
@@ -88,5 +88,6 @@
   "newAdminPwd": "新密码",
   "The password for user admin will be set": "admin 的密码将会被重置为此处的值",
   "The retention time of job log file": "任务日志保留时间，超过此天数的文件将被清理；比如填 7 表示只保留最近 7 天的文件，更老的文件将被永久删除",
-  "daysToKeep": "保留天数"
+  "daysToKeep": "保留天数",
+  "cleanJobLogs": "清理任务日志"
 }
