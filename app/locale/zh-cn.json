@@ -26,7 +26,6 @@
   "Number of nodes for the cluster to create": "要创建的节点数量",
   "instance class": "实例类型",
   "Instance Class": "实例类型",
-  "The instance type for the cluster to run, such as high performance, high performance plus": "节点实例类型，比如性能型与超高性能型",
   "The volume type for each instance,such as high performance,high performance plus": "磁盘类型，比如性能型与超高性能型",
   "access_key_id": "access_key_id",
   "Provide the secretkey to connect QingStor for storing Image data; keep untouched if not using QingStor": "（若使用本地存储请忽略此项）提供可用于访问 QingStor 的 Secret Key，用于 Harbor 的镜像存储",
