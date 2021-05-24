@@ -1,5 +1,5 @@
 {{- if eq $nodeRole "storage" }}
-exportsDir=/opt/app/conf/nfs-server
+exportsDir=/opt/app/current/conf/nfs-server
 flush > $exportsDir/exports << EXPORTS_FILE
 /data/registry	{{ range ls "/hosts" | filter "(web|job)_node" }}{{ range getvs (printf "/hosts/%s/*/ip" .) }}{{ . }}(rw,sync,no_root_squash,no_subtree_check) {{ end }}{{ end }}
 EXPORTS_FILE
@@ -7,7 +7,7 @@ EXPORTS_FILE
 
 
 {{- if eq $nodeRole "log" }}
-flush > /opt/app/conf/nfs-server/exports << LOG_EXPORTS_ENV
+flush > /opt/app/current/conf/nfs-server/exports << LOG_EXPORTS_ENV
 /var/log/harbor/job-logs {{ range getvs "/hosts/job_node/*/ip" }}{{ . }}(rw,sync,no_root_squash,no_subtree_check)  {{ end }}
 LOG_EXPORTS_ENV
 {{- end }}

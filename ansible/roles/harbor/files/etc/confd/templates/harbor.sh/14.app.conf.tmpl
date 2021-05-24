@@ -2,7 +2,7 @@
 
 xsrfKey=$(echo -n {{ getv "/cluster/cluster_id" }}{{ getv "/cluster/global_uuid" }} | sha1sum | base64)
 
-flush > /opt/app/conf/core/app.conf << APP_CONF_EOF
+flush > /opt/app/current/conf/core/app.conf << APP_CONF_EOF
 appname = Harbor
 runmode = dev
 enablegzip = true

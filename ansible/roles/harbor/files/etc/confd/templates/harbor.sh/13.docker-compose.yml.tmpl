@@ -1,4 +1,4 @@
-cat > /opt/app/conf/docker-compose.yml << DOCKER_COMPOSE_FILE
+cat > /opt/app/current/conf/docker-compose.yml << DOCKER_COMPOSE_FILE
 version: '2.3'
 services:
   {{- if eq $nodeRole "log" }}

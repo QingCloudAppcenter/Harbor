@@ -3,12 +3,12 @@ Description=Harbor wrapper
 Documentation=https://goharbor.io
 After=network-online.target
 Wants=network-online.target
-ConditionFileNotEmpty=/opt/app/conf/docker-compose.yml
+ConditionFileNotEmpty=/opt/app/current/conf/docker-compose.yml
 
 [Service]
-EnvironmentFile=/opt/app/bin/envs/harbor.env
-ExecStart=/usr/bin/docker-compose -f /opt/app/conf/docker-compose.yml up
-ExecStop=/usr/bin/docker-compose -f /opt/app/conf/docker-compose.yml down
+EnvironmentFile=/opt/app/current/bin/envs/harbor.env
+ExecStart=/usr/bin/docker-compose -f /opt/app/current/conf/docker-compose.yml up
+ExecStop=/usr/bin/docker-compose -f /opt/app/current/conf/docker-compose.yml down
 Restart=on-abnormal
 TimeoutSec=300s
 
