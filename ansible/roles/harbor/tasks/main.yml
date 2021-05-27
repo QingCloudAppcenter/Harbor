@@ -113,6 +113,8 @@
   file:
     path: "{{ item }}"
     state: directory
+    owner: root
+    group: root
   with_items:
     - /data/secret
     - /data/trivy-adapter
@@ -121,8 +123,8 @@
   file:
     path: "{{ item }}"
     state: directory
-    owner: 10000
-    group: 10000
+    owner: '10000'
+    group: '10000'
   with_items:
     - /data/ca_download
     - /data/chart_storage
@@ -136,22 +138,41 @@
   file:
     path: "{{ item }}"
     state: directory
-    owner: 999
-    group: 999
+    owner: '999'
+    group: '999'
   with_items:
     - /data/database
     - /data/redis
 
-- name: prepare config dirs(/opt/app/conf) for Harbor
+- name: prepare config dirs(/opt/app/conf) for Harbor 0
   file:
-    path: /opt/app/conf/{{ item }}
+    path: /opt/app/current/conf/{{ item }}
     mode: u=rwx,g=rx,o=
-    owner: 10000
-    group: 10000
+    owner: root
+    group: root
+  with_items:
+    - log
+
+- name: prepare config dirs(/opt/app/conf) for Harbor 1
+  file:
+    path: /opt/app/current/conf/{{ item }}
+    mode: u=rwx,g=rx,o=
+    owner: '10000'
+    group: '10000'
     recurse: yes
   with_items:
     - jobservice
-      - portal
+    - portal
+
+- name: prepare config dirs(/opt/app/conf) for Harbor 2
+  file:
+    path: /opt/app/current/conf/{{ item }}
+    mode: u=rw,g=r,o=
+    owner: '10000'
+    group: '10000'
+  with_items:
+    - log/logrotate.conf
+    - log/rsyslog_docker.conf
 
 - name: install harbor service
   copy:
@@ -179,12 +200,12 @@
     masked: yes
     state: stopped
 
-- name: Give secure permissions to logrotate
-  file:
-    path: /opt/app/current/conf/log/logrotate.conf
-    owner: root
-    group: root
-    mode: '644'
+# - name: Give secure permissions to logrotate
+#   file:
+#     path: /opt/app/current/conf/log/logrotate.conf
+#     owner: root
+#     group: root
+#     mode: '644'
 
 - name: generate key for web/job node
   shell: |

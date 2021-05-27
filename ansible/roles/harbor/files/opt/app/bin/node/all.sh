@@ -23,7 +23,7 @@ ensureNfsModulesLoaded() {
 }
 
 dockerCompose() {
-  docker-compose --env-file /opt/app/bin/envs/harbor.env -f /opt/app/conf/docker-compose.yml $@
+  docker-compose --env-file /opt/app/current/bin/envs/harbor.env -f /opt/app/current/conf/docker-compose.yml $@
 }
 
 serverMountPath=/data/registry
@@ -37,8 +37,8 @@ initNode() {
     deluser ubuntu sudo || log Already removed user ubuntu from sudo.
     mkdir -p /var/log/harbor/job-logs
     chown -R 10000.10000 /var/log/harbor
-    ln -s -f /opt/app/conf/log/logrotate.conf  /etc/logrotate.d/harbor-log.conf
-    ln -s -f /opt/app/conf/nfs-server/exports  /etc/exports
+    ln -s -f /opt/app/current/conf/log/logrotate.conf  /etc/logrotate.d/harbor-log.conf
+    ln -s -f /opt/app/current/conf/nfs-server/exports  /etc/exports
   fi
 
   if [ "$MY_ROLE" = "storage" ]; then 
@@ -65,6 +65,8 @@ initCluster() {
     mkdir -p $dbDataDir
     chown -R 999.999 $dbDataDir
   fi
+
+  _initCluster
 }
 
 init() {
