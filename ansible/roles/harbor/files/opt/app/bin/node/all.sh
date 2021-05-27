@@ -28,7 +28,7 @@ dockerCompose() {
 
 serverMountPath=/data/registry
 dbMountDir=/data/database
-dbDataDir=$dbMountDir/app-1.2.0
+dbDataDir=$dbMountDir/harbor-$HARBOR_VERSION
 initNode() {
   _initNode
   mkdir -p /data/registry
@@ -43,7 +43,7 @@ initNode() {
 
   if [ "$MY_ROLE" = "storage" ]; then 
     ensureNfsModulesLoaded; 
-    ln -s -f /opt/app/conf/nfs-server/exports /etc/exports
+    ln -s -f /opt/app/current/conf/nfs-server/exports /etc/exports
   fi
 }
 

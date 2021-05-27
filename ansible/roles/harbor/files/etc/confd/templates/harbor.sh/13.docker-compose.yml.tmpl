@@ -33,6 +33,33 @@ services:
       options:
         tag: "harbor.log"
   {{- end }}
+  {{- if eq $nodeRole "db" }}
+  postgresql:
+    image: goharbor/harbor-db:\$HARBOR_VERSION
+    container_name: harbor-db
+    restart: always
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - SETGID
+      - SETUID
+    volumes:
+      - /data/database/harbor-\$HARBOR_VERSION:/var/lib/postgresql/data:z
+    networks:
+      harbor:
+    ports:
+      - 5432:5432
+    dns_search: .
+    env_file:
+      - ./db/env
+    logging:
+      driver: "syslog"
+      options:
+        syslog-address: "tcp://log:1514"
+        tag: "db.postgresql"
+  {{- end }}
 networks:
   harbor:
     external: false
