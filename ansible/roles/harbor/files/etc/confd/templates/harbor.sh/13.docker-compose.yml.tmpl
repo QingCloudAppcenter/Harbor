@@ -33,6 +33,30 @@ services:
       options:
         tag: "harbor.log"
   {{- end }}
+  {{- if eq $nodeRole "cache" }}
+  redis:
+    image: goharbor/redis-photon:\$HARBOR_VERSION
+    container_name: redis
+    restart: always
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+    volumes:
+      - /data/redis:/var/lib/redis
+    networks:
+      - harbor
+    ports:
+      - 6379:6379
+    dns_search: .
+    logging:
+      driver: "syslog"
+      options:
+        syslog-address: "tcp://log:1514"
+        tag: "cache.redis"
+  {{- end }}
   {{- if eq $nodeRole "db" }}
   postgresql:
     image: goharbor/harbor-db:\$HARBOR_VERSION
