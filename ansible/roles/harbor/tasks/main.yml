@@ -180,6 +180,8 @@
     mode: u=rwx,g=rx,o=rx
   with_items:
     - registry
+    - registryctl
+    - shared/trust-certificates
 
 - name: install harbor service
   copy:
