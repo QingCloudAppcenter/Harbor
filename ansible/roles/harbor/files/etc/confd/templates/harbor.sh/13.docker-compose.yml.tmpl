@@ -84,6 +84,37 @@ services:
         syslog-address: "tcp://log:1514"
         tag: "db.postgresql"
   {{- end }}
+  {{- range getvs "/host/role" | filter "web|job" }}
+  registry:
+    image: goharbor/registry-photon:\$HARBOR_VERSION
+    container_name: registry
+    restart: always
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+    volumes:
+      - dataDir:/storage:z
+      - ./registry/:/etc/registry/:z
+      - type: bind
+        source: /data/secret/registry/root.crt
+        target: /etc/registry/root.crt
+      - type: bind
+        source: ./shared/trust-certificates
+        target: /harbor_cust_cert
+    networks:
+      - harbor
+    dns_search: .
+    extra_hosts:
+      - 'redis:{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }}{{ end }}'
+    logging:
+      driver: "syslog"
+      options:
+        syslog-address: "tcp://log:1514"
+        tag: "{{ $nodeRole }}.registry"
+    {{- end }}
 networks:
   harbor:
     external: false
@@ -91,4 +122,33 @@ networks:
       driver: default
       config:
         - subnet: 172.18.0.0/16
+  harbor-chartmuseum:
+    external: false
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.19.0.0/16
+{{- range getvs "/host/role" | filter "web|job" }}
+volumes:
+  dataDir:
+    driver: local
+    driver_opts:
+  {{- if len (ls "/hosts/storage_node") }}
+      type: nfs4
+      o: addr={{ range getvs "/hosts/storage_node/*/ip" }}{{ . }}{{ end }},rw
+      device: ":/data/registry"
+  {{- else }}
+      type: none
+      device: /data/registry
+      o: bind
+  {{- end }}
+  {{- if eq $nodeRole "job" }}
+  jobLogs:
+    driver: local
+    driver_opts:
+      type: nfs4
+      o: addr={{ range getvs "/hosts/log_node/*/ip" }}{{ . }}{{ end }},rw
+      device: ":/var/log/harbor/job-logs"
+  {{- end }}
+{{- end }}
 DOCKER_COMPOSE_FILE

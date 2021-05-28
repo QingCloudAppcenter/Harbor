@@ -32,7 +32,7 @@
 - name: install tools
   apt:
     update_cache: yes
-    name: ['nfs-common', 'python3-pip', "nfs-kernel-server"]
+    name: ['nfs-common', 'python3-pip', "nfs-kernel-server", 'apache2-utils']
     state: present
 
 # - name: install docker-py
@@ -173,6 +173,13 @@
   with_items:
     - log/logrotate.conf
     - log/rsyslog_docker.conf
+
+- name: prepare config dirs(/opt/app/conf) for Harbor 3
+  file:
+    path: /opt/app/current/conf/{{ item }}
+    mode: u=rwx,g=rx,o=rx
+  with_items:
+    - registry
 
 - name: install harbor service
   copy:

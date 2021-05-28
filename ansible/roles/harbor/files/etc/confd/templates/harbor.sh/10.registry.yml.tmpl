@@ -1,6 +1,8 @@
 {{- range getvs "/host/role" | filter "web|job" }}
 encrypted=$(echo -n {{ getv "/cluster/user_id" }}{{ getv "/cluster/global_uuid" }} | sha256sum | base64)
 redisPassword=${encrypted:0:16}
+registryPassword=${encrypted:17:16}
+htpasswd -nbB harbor_registry_user $registryPassword > /opt/app/current/conf/registry/passwd
 
 flush > /opt/app/current/conf/registry/config.yml << REGISTRY_CONF_FILE
 version: 0.1
@@ -36,7 +38,10 @@ storage:
     enabled: true
 redis:
   addr: redis:6379
-  password: $redisPassword
+  readtimeout: 10s
+  writetimeout: 10s
+  dialtimeout: 10s
+  password:
   db: 1
 http:
   addr: :5000
@@ -44,23 +49,15 @@ http:
   debug:
     addr: localhost:5001
 auth:
-  token:
-    issuer: harbor-token-issuer
-    realm: {{ getv "/env/HARBOR_HOST" }}/service/token
-    rootcertbundle: /etc/registry/root.crt
-    service: harbor-registry
+  htpasswd:
+    realm: harbor-registry-basic-realm
+    path: /etc/registry/passwd
 validation:
   disabled: true
-notifications:
-  endpoints:
-  - name: harbor
-    disabled: false
-    url: http://core:8080/service/notifications
-    timeout: 3000ms
-    threshold: 5
-    backoff: 1s
 compatibility:
   schema1:
     enabled: true
 REGISTRY_CONF_FILE
+
+chown 10000.10000 /opt/app/current/conf/registry/config.yml
 {{- end }}
