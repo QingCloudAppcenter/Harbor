@@ -159,12 +159,22 @@
     mode: u=rwx,g=rx,o=
     owner: '10000'
     group: '10000'
-    recurse: yes
   with_items:
     - jobservice
     - portal
+    - nginx/conf.d
 
 - name: prepare config dirs(/opt/app/conf) for Harbor 2
+  file:
+    path: /opt/app/current/conf/{{ item }}
+    mode: u=rwx,g=rx,o=rx
+  with_items:
+    - registry
+    - registryctl
+    - shared/trust-certificates
+    - nginx
+
+- name: prepare config dirs(/opt/app/conf) for Harbor 3
   file:
     path: /opt/app/current/conf/{{ item }}
     mode: u=rw,g=r,o=
@@ -173,15 +183,8 @@
   with_items:
     - log/logrotate.conf
     - log/rsyslog_docker.conf
-
-- name: prepare config dirs(/opt/app/conf) for Harbor 3
-  file:
-    path: /opt/app/current/conf/{{ item }}
-    mode: u=rwx,g=rx,o=rx
-  with_items:
-    - registry
-    - registryctl
-    - shared/trust-certificates
+    - portal/nginx.conf
+    - nginx/nginx.conf
 
 - name: install harbor service
   copy:
