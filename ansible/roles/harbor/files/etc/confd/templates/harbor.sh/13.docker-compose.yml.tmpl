@@ -143,6 +143,52 @@ services:
       options:
         syslog-address: "tcp://log:1514"
         tag: "{{ $nodeRole }}.registryctl"
+  core:
+    image: goharbor/harbor-core:\$HARBOR_VERSION
+    container_name: harbor-core
+    env_file:
+      - ./core/env
+    restart: always
+    cap_drop:
+      - ALL
+    cap_add:
+      - SETGID
+      - SETUID
+    volumes:
+      - /data/ca_download/:/etc/core/ca/:z
+      - /data/:/data/:z
+      - ./core/certificates/:/etc/core/certificates/:z
+      - type: bind
+        source: ./core/app.conf
+        target: /etc/core/app.conf
+      - type: bind
+        source: /data/secret/core/private_key.pem
+        target: /etc/core/private_key.pem
+      - type: bind
+        source: /data/secret/keys/secretkey
+        target: /etc/core/key
+      - type: bind
+        source: ./shared/trust-certificates
+        target: /harbor_cust_cert
+    networks:
+      harbor:
+      harbor-chartmuseum:
+        aliases:
+          - harbor-core
+    dns_search: .
+    extra_hosts:
+      - 'redis:{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }}{{ end }}'
+      - 'postgresql:{{ range getvs "/hosts/db_node/*/ip" }}{{ . }}{{ end }}'
+      {{- range getvs "/hosts/job_node/*/ip" }}
+      - 'jobservice:{{ . }}'
+      {{- end }}
+    depends_on:
+      - registry
+    logging:
+      driver: "syslog"
+      options:
+        syslog-address: "tcp://log:1514"
+        tag: "{{ $nodeRole }}.core"
   {{- end }}
 networks:
   harbor:

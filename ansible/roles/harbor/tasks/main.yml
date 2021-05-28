@@ -221,3 +221,12 @@
       openssl genrsa -out /data/secret/core/private_key.pem 4096
       openssl req -new -x509 -key /data/secret/core/private_key.pem -subj '/C=CN/ST=Beijing/O=QingCloud/OU=AppCenter/CN=Harbor' -out /data/secret/registry/root.crt -days 3650
 
+- name: set key-file permission
+  file:
+      path: /data/secret/{{ item }}
+      mode: u=rw,g=,o=
+      owner: '10000'
+      group: '10000'
+  with_items:
+    - core/private_key.pem
+    - registry/root.crt

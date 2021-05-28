@@ -1,7 +1,7 @@
 {{- range getvs "/host/role" | filter "web|job" }}
 encrypted=$(echo -n {{ getv "/cluster/user_id" }}{{ getv "/cluster/global_uuid" }} | sha256sum | base64)
 redisPassword=${encrypted:0:16}
-registryPassword=${encrypted:17:16}
+registryPassword=${encrypted:32:16}
 htpasswd -nbB harbor_registry_user $registryPassword > /opt/app/current/conf/registry/passwd
 
 flush > /opt/app/current/conf/registry/config.yml << REGISTRY_CONF_FILE
