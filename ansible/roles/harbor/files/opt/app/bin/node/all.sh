@@ -37,6 +37,9 @@ initNode() {
     deluser ubuntu sudo || log Already removed user ubuntu from sudo.
     mkdir -p /var/log/harbor/job-logs
     chown -R 10000.10000 /var/log/harbor
+    mkdir -p /var/log/harbor/trivy-data/reports
+    mkdir -p /var/log/harbor/trivy-data/trivy
+    chown -R 10000.10000 /var/log/harbor/trivy-data
     ln -s -f /opt/app/current/conf/log/logrotate.conf  /etc/logrotate.d/harbor-log.conf
     ln -s -f /opt/app/current/conf/nfs-server/exports  /etc/exports
   fi

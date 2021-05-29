@@ -221,6 +221,67 @@ services:
     env_file:
       ./chartserver/env
   {{- end }}
+  {{- if eq $nodeRole "job" }}
+  trivy-adapter:
+    container_name: trivy-adapter
+    image: goharbor/trivy-adapter-photon:\$HARBOR_VERSION
+    restart: always
+    cap_drop:
+      - ALL
+    dns_search: .
+    extra_hosts:
+      - "redis:{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }}{{ end }}"
+    networks:
+      - harbor
+    volumes:
+      - trivyDataTrivy:/home/scanner/.cache/trivy
+      - trivyDataReports:/home/scanner/.cache/reports
+      - type: bind
+        source: ./shared/trust-certificates
+        target: /harbor_cust_cert
+    logging:
+      driver: "syslog"
+      options:
+        syslog-address: "tcp://log:1514"
+        tag: "job.trivy-adapter"
+    env_file:
+      ./trivy-adapter/env
+  jobservice:
+    image: goharbor/harbor-jobservice:\$HARBOR_VERSION
+    container_name: harbor-jobservice
+    env_file:
+      - ./jobservice/env
+    restart: always
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+    volumes:
+      - jobLogs:/var/log/jobs:z
+      - type: bind
+        source: ./jobservice/config.yml
+        target: /etc/jobservice/config.yml
+      - type: bind
+        source: ./shared/trust-certificates
+        target: /harbor_cust_cert
+    networks:
+      - harbor
+    ports:
+      - 8080:8080
+    dns_search: .
+    extra_hosts:
+      - "redis:{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }}{{ end }}"
+      - "postgresql:{{ range getvs "/hosts/db_node/*/ip" }}{{ . }}{{ end }}"
+    depends_on:
+      - core
+    logging:
+      driver: "syslog"
+      options:
+        syslog-address: "tcp://log:1514"
+        tag: "job.jobservice"
+  {{- end }}
   {{- if eq $nodeRole "web" }}
   portal:
     image: goharbor/harbor-portal:\$HARBOR_VERSION
@@ -310,6 +371,18 @@ volumes:
       type: nfs4
       o: addr={{ range getvs "/hosts/log_node/*/ip" }}{{ . }}{{ end }},rw
       device: ":/var/log/harbor/job-logs"
+  trivyDataTrivy:
+    driver: local
+    driver_opts:
+      type: nfs4
+      o: addr={{ range getvs "/hosts/log_node/*/ip" }}{{ . }}{{ end }},rw
+      device: ":/var/log/harbor/trivy-data/trivy"
+  trivyDataReports:
+    driver: local
+    driver_opts:
+      type: nfs4
+      o: addr={{ range getvs "/hosts/log_node/*/ip" }}{{ . }}{{ end }},rw
+      device: ":/var/log/harbor/trivy-data/reports"
   {{- end }}
 {{- end }}
 DOCKER_COMPOSE_FILE

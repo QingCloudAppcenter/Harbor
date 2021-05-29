@@ -133,6 +133,8 @@
     - /data/secret/core
     - /data/secret/keys
     - /data/secret/registry
+    - /data/trivy-adapter/trivy
+    - /data/trivy-adapter/reports
 
 - name: prepare directories(/data) for Harbor 2
   file:
@@ -185,6 +187,7 @@
     - log/rsyslog_docker.conf
     - portal/nginx.conf
     - nginx/nginx.conf
+    - jobservice/config.yml
 
 - name: install harbor service
   copy:

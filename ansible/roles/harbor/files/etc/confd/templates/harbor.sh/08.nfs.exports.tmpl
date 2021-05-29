@@ -9,5 +9,7 @@ EXPORTS_FILE
 {{- if eq $nodeRole "log" }}
 flush > /opt/app/current/conf/nfs-server/exports << LOG_EXPORTS_ENV
 /var/log/harbor/job-logs {{ range getvs "/hosts/job_node/*/ip" }}{{ . }}(rw,sync,no_root_squash,no_subtree_check)  {{ end }}
+/var/log/harbor/trivy-data/trivy {{ range getvs "/hosts/job_node/*/ip" }}{{ . }}(rw,sync,no_root_squash,no_subtree_check)  {{ end }}
+/var/log/harbor/trivy-data/reports {{ range getvs "/hosts/job_node/*/ip" }}{{ . }}(rw,sync,no_root_squash,no_subtree_check)  {{ end }}
 LOG_EXPORTS_ENV
 {{- end }}
