@@ -189,6 +189,37 @@ services:
       options:
         syslog-address: "tcp://log:1514"
         tag: "{{ $nodeRole }}.core"
+  chartmuseum:
+    container_name: chartmuseum
+    image: goharbor/chartmuseum-photon:\$HARBOR_VERSION
+    restart: always
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - SETGID
+      - SETUID
+    networks:
+      - harbor-chartmuseum
+    dns_search: .
+    extra_hosts:
+      - "redis:{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }}{{ end }}"
+    volumes:
+      {{- if len (ls "/hosts/storage_node") }}
+      - dataDir:/chart_storage:z
+      {{- end }}
+      - ./chartserver:/etc/chartserver:z
+      - type: bind
+        source: ./shared/trust-certificates
+        target: /harbor_cust_cert
+    logging:
+      driver: "syslog"
+      options:
+        syslog-address: "tcp://log:1514"
+        tag: "{{ $nodeRole }}.chartmuseum"
+    env_file:
+      ./chartserver/env
   {{- end }}
   {{- if eq $nodeRole "web" }}
   portal:
