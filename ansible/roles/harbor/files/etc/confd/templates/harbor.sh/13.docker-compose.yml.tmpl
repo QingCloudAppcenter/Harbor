@@ -179,8 +179,11 @@ services:
     extra_hosts:
       - 'redis:{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }}{{ end }}'
       - 'postgresql:{{ range getvs "/hosts/db_node/*/ip" }}{{ . }}{{ end }}'
-      {{- range getvs "/hosts/job_node/*/ip" }}
+      {{- if eq $nodeRole "web" }}
+            {{- range getvs "/hosts/job_node/*/ip" }}
       - 'jobservice:{{ . }}'
+      - 'trivy-adapter:{{ . }}'
+            {{- end }}
       {{- end }}
     depends_on:
       - registry
@@ -233,6 +236,8 @@ services:
       - "redis:{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }}{{ end }}"
     networks:
       - harbor
+    ports:
+      - 8080:8080
     volumes:
       - trivyDataTrivy:/home/scanner/.cache/trivy
       - trivyDataReports:/home/scanner/.cache/reports
@@ -269,7 +274,7 @@ services:
     networks:
       - harbor
     ports:
-      - 8080:8080
+      - 8081:8080
     dns_search: .
     extra_hosts:
       - "redis:{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }}{{ end }}"
