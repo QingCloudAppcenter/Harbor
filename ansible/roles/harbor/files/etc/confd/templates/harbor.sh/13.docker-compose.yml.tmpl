@@ -182,7 +182,9 @@ services:
       {{- if eq $nodeRole "web" }}
             {{- range getvs "/hosts/job_node/*/ip" }}
       - 'jobservice:{{ . }}'
+              {{- if eq (getv "/env/trivy.enabled" "true") "true" }}
       - 'trivy-adapter:{{ . }}'
+              {{- end }}
             {{- end }}
       {{- end }}
     depends_on:
@@ -225,6 +227,7 @@ services:
       ./chartserver/env
   {{- end }}
   {{- if eq $nodeRole "job" }}
+    {{- if eq (getv "/env/trivy.enabled" "true") "true" }}
   trivy-adapter:
     container_name: trivy-adapter
     image: goharbor/trivy-adapter-photon:\$HARBOR_VERSION
@@ -251,6 +254,7 @@ services:
         tag: "job.trivy-adapter"
     env_file:
       ./trivy-adapter/env
+    {{- end }}
   jobservice:
     image: goharbor/harbor-jobservice:\$HARBOR_VERSION
     container_name: harbor-jobservice
