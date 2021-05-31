@@ -232,6 +232,11 @@ services:
     container_name: trivy-adapter
     image: goharbor/trivy-adapter-photon:\$HARBOR_VERSION
     restart: always
+    healthcheck:
+      test: curl --fail -s http://127.0.0.1:8081/probe/healthy || curl -k --fail -s https://127.0.0.1:8443/probe/healthy || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 3
     cap_drop:
       - ALL
     dns_search: .
@@ -240,7 +245,7 @@ services:
     networks:
       - harbor
     ports:
-      - 8080:8080
+      - 8081:8081
     volumes:
       - trivyDataTrivy:/home/scanner/.cache/trivy
       - trivyDataReports:/home/scanner/.cache/reports
@@ -278,7 +283,7 @@ services:
     networks:
       - harbor
     ports:
-      - 8081:8080
+      - 8080:8080
     dns_search: .
     extra_hosts:
       - "redis:{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }}{{ end }}"
