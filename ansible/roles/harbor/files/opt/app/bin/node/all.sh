@@ -82,6 +82,11 @@ createKeys() {
 }
 
 start() {
+  if ! isClusterInitialized; then
+    log "fix for heath checking: init cluster first"
+    initCluster
+  fi
+
   _start
   retry 60 2 0 execute check
 }
