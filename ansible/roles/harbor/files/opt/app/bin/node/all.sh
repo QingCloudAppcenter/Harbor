@@ -187,7 +187,8 @@ resetAdminPwd() {
 #example  
 #password     7055c709338844684a03afd47eb99eaf (1.7.1)  901e944c153438064a68712fef73c2dd (1.9.3)  --> Harbor12345                           
 #salt         7t3s93zk7qhcg7lqx1xm9meega26ryte          ne4triv6j6f5074ei7q36nbqvd1ow5pz
-  docker exec -i db sh -c "psql -U postgres -d registry -c \"update harbor_user set password='ad07ad1d21fa0b43e48320256db73749',salt='2t5pyybr2mgtz6odecfbfdauh9637p6q',password_version='sha256' where username='admin';\""
+#still ok at 2.2.1
+  docker exec -i harbor-db sh -c "psql -U postgres -d registry -c \"update harbor_user set password='ad07ad1d21fa0b43e48320256db73749',salt='2t5pyybr2mgtz6odecfbfdauh9637p6q',password_version='sha256' where username='admin';\""
 }
 
 cleanJobLogs() {
