@@ -1,6 +1,0 @@
-{{- if eq $nodeRole "job" }}
-encrypted=$(echo -n {{ getv "/cluster/user_id" }}{{ getv "/cluster/global_uuid" }} | sha256sum | base64)
-redisPassword=${encrypted:0:16}
-
-sed -i -r "s|^(\s+redis_url:).*$|\1 redis://anonymous:$redisPassword@redis:6379/2|g" /opt/app/current/conf/jobservice/config.yml
-{{- end }}
