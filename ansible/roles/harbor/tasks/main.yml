@@ -6,13 +6,13 @@
     docker_version: 20.10.6~3
     docker_compose_version: 1.29.2
 
+- name: install app-agent
+  include_role:
+    name: app-agent-1.1.1    
+
 - name: install confd files
   include_role:
     name: confd-files-1.1.0
-
-- name: install app-agent
-  include_role:
-    name: app-agent-1.1.1
 
 - name: copy binaries
   copy:
@@ -214,18 +214,6 @@
     enabled: no
     masked: yes
     state: stopped
-
-- name: create daemon.json for docker (for dns resolv)
-  copy:
-    dest: /etc/docker/daemon.json
-    content: |
-      {
-        "dns":[
-          "100.64.9.5",
-          "119.29.29.29",
-          "114.114.114.114"
-        ]
-      }
 
 - name: generate key for web/job node
   shell: |

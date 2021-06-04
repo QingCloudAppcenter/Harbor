@@ -1,3 +1,4 @@
+tmpstr=$(resolvectl | grep -o '[[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+' | uniq | sed 's/^/      - /')
 cat > /opt/app/current/conf/docker-compose.yml << DOCKER_COMPOSE_FILE
 version: '2.3'
 services:
@@ -7,6 +8,8 @@ services:
     container_name: harbor-log
     restart: always
     dns_search: .
+    dns:
+$tmpstr
     healthcheck:
       test: netstat -ltun | grep 10514
     cap_drop:
@@ -51,6 +54,8 @@ services:
     ports:
       - 6379:6379
     dns_search: .
+    dns:
+$tmpstr
     logging:
       driver: "syslog"
       options:
@@ -76,6 +81,8 @@ services:
     ports:
       - 5432:5432
     dns_search: .
+    dns:
+$tmpstr
     env_file:
       - ./db/env
     logging:
@@ -107,6 +114,8 @@ services:
     networks:
       - harbor
     dns_search: .
+    dns:
+$tmpstr
     extra_hosts:
       - 'redis:{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }}{{ end }}'
     logging:
@@ -138,6 +147,8 @@ services:
     networks:
       - harbor
     dns_search: .
+    dns:
+$tmpstr
     logging:
       driver: "syslog"
       options:
@@ -176,6 +187,8 @@ services:
         aliases:
           - harbor-core
     dns_search: .
+    dns:
+$tmpstr
     extra_hosts:
       - 'redis:{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }}{{ end }}'
       - 'postgresql:{{ range getvs "/hosts/db_node/*/ip" }}{{ . }}{{ end }}'
@@ -208,6 +221,8 @@ services:
     networks:
       - harbor-chartmuseum
     dns_search: .
+    dns:
+$tmpstr
     extra_hosts:
       - "redis:{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }}{{ end }}"
     volumes:
@@ -240,6 +255,8 @@ services:
     cap_drop:
       - ALL
     dns_search: .
+    dns:
+$tmpstr
     extra_hosts:
       - "redis:{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }}{{ end }}"
     networks:
@@ -285,6 +302,8 @@ services:
     ports:
       - 8080:8080
     dns_search: .
+    dns:
+$tmpstr
     extra_hosts:
       - "redis:{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }}{{ end }}"
       - "postgresql:{{ range getvs "/hosts/db_node/*/ip" }}{{ . }}{{ end }}"
@@ -315,6 +334,8 @@ services:
     networks:
       - harbor
     dns_search: .
+    dns:
+$tmpstr
     logging:
       driver: "syslog"
       options:
@@ -339,6 +360,8 @@ services:
     networks:
       - harbor
     dns_search: .
+    dns:
+$tmpstr
     ports:
       - 80:8080
     depends_on:
