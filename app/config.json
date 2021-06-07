@@ -491,6 +491,13 @@
       "default": false,
       "required": "no"
     }, {
+      "key": "trivy.enabled",
+      "label": "Enable trivy plugin",
+      "description": "enable trivy plugin to find vulnerabilities for containers and other artifacts",
+      "type": "boolean",
+      "default": true,
+      "required": "no"
+    }, {
       "key": "web.console.enabled",
       "label": "Enable web console",
       "description": "enable web console to view and download files",

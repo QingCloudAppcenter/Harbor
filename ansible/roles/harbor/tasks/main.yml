@@ -1,19 +1,23 @@
 ---
 - name: set vars
   set_fact:
-    harbor_version: v1.9.3
-    containerd_version: 1.2.6-3
-    docker_version: 19.03.5~3
-    docker_compose_version: 1.25.0
+    harbor_version: v2.2.1
+    containerd_version: 1.4.4-1
+    docker_version: 20.10.6~3
+    docker_compose_version: 1.29.2
+
+- name: install app-agent
+  include_role:
+    name: app-agent-1.1.1    
 
 - name: install confd files
   include_role:
-    name: confd-files-1.0.1
+    name: confd-files-1.1.0
 
 - name: copy binaries
   copy:
     src: "{{ role_path }}/files/opt/app/"
-    dest: /opt/app/
+    dest: /opt/app/current
     owner: root
     group: svc
     mode: preserve
@@ -21,37 +25,37 @@
 
 - name: set up harbor env
   copy:
-    dest: /opt/app/bin/envs/harbor.env
+    dest: /opt/app/current/bin/envs/harbor.env
     content: |
       HARBOR_VERSION={{ harbor_version }}
 
 - name: install tools
   apt:
     update_cache: yes
-    name: ['nfs-common', 'python3-pip', "nfs-kernel-server"]
+    name: ['nfs-common', 'python3-pip', "nfs-kernel-server", 'apache2-utils']
     state: present
 
 - name: install docker-py
   pip:
     name: ['docker-py']
 
-- name: Download reusable containerd binaries locally
-  get_url:
-    url: "https://download.docker.com/linux/ubuntu/dists/xenial/pool/stable/amd64/containerd.io_{{ containerd_version }}_amd64.deb"
-    dest: "{{ role_path }}/files/tmp/containerd-{{ containerd_version }}.deb"
-  delegate_to: localhost
+# - name: Download reusable containerd binaries locally
+#   get_url:
+#     url: "https://download.docker.com/linux/ubuntu/dists/focal/pool/stable/amd64/containerd.io_{{ containerd_version }}_amd64.deb"
+#     dest: "{{ role_path }}/files/tmp/containerd-{{ containerd_version }}.deb"
+#   delegate_to: localhost
 
-- name: Download reusable Docker CE CLI binaries locally
-  get_url:
-    url: "https://download.docker.com/linux/ubuntu/dists/xenial/pool/stable/amd64/docker-ce-cli_{{ docker_version }}-0~ubuntu-xenial_amd64.deb"
-    dest: "{{ role_path }}/files/tmp/docker-ce-cli-{{ docker_version }}.deb"
-  delegate_to: localhost
+# - name: Download reusable Docker CE CLI binaries locally
+#   get_url:
+#     url: "https://download.docker.com/linux/ubuntu/dists/focal/pool/stable/amd64/docker-ce-cli_{{ docker_version }}-0~ubuntu-focal_amd64.deb"
+#     dest: "{{ role_path }}/files/tmp/docker-ce-cli-{{ docker_version }}.deb"
+#   delegate_to: localhost
 
-- name: Download reusable Docker CE binaries locally
-  get_url:
-    url: "https://download.docker.com/linux/ubuntu/dists/xenial/pool/stable/amd64/docker-ce_{{ docker_version }}-0~ubuntu-xenial_amd64.deb"
-    dest: "{{ role_path }}/files/tmp/docker-ce-{{ docker_version }}.deb"
-  delegate_to: localhost
+# - name: Download reusable Docker CE binaries locally
+#   get_url:
+#     url: "https://download.docker.com/linux/ubuntu/dists/focal/pool/stable/amd64/docker-ce_{{ docker_version }}-0~ubuntu-focal_amd64.deb"
+#     dest: "{{ role_path }}/files/tmp/docker-ce-{{ docker_version }}.deb"
+#   delegate_to: localhost
 
 - name: Copy Docker binaries
   copy:
@@ -78,26 +82,28 @@
     name: "{{ item }}"
     source: pull
   with_items:
-    - "vmware/harbor-db-migrator:1.3"
-    - "goharbor/harbor-migrator:v1.6.0"
+    - "goharbor/harbor-exporter:{{ harbor_version }}"
+    - "goharbor/chartmuseum-photon:{{ harbor_version }}"
     - "goharbor/redis-photon:{{ harbor_version }}"
+    - "goharbor/trivy-adapter-photon:{{ harbor_version }}"
+    - "goharbor/notary-server-photon:{{ harbor_version }}"
+    - "goharbor/notary-signer-photon:{{ harbor_version }}"
     - "goharbor/harbor-registryctl:{{ harbor_version }}"
-    - "goharbor/registry-photon:v2.7.1-patch-2819-2553-{{ harbor_version }}"
+    - "goharbor/registry-photon:{{ harbor_version }}"
     - "goharbor/nginx-photon:{{ harbor_version }}"
     - "goharbor/harbor-log:{{ harbor_version }}"
     - "goharbor/harbor-jobservice:{{ harbor_version }}"
     - "goharbor/harbor-core:{{ harbor_version }}"
     - "goharbor/harbor-portal:{{ harbor_version }}"
     - "goharbor/harbor-db:{{ harbor_version }}"
-    - "goharbor/chartmuseum-photon:v0.9.0-{{ harbor_version }}"
-    - "goharbor/clair-photon:v2.1.0-{{ harbor_version }}"
+    - "goharbor/prepare:{{ harbor_version }}"
 
 
-- name: Download reusable Docker Compose binaries locally
-  get_url:
-    url: "https://github.com/docker/compose/releases/download/{{ docker_compose_version }}/docker-compose-Linux-x86_64"
-    dest: "{{ role_path }}/files/tmp/docker-compose-{{ docker_compose_version }}"
-  delegate_to: localhost
+# - name: Download reusable Docker Compose binaries locally
+#   get_url:
+#     url: "https://github.com/docker/compose/releases/download/{{ docker_compose_version }}/docker-compose-Linux-x86_64"
+#     dest: "{{ role_path }}/files/tmp/docker-compose-{{ docker_compose_version }}"
+#   delegate_to: localhost
 
 - name: Copy Docker Compose binary
   copy:
@@ -105,48 +111,85 @@
     dest: /usr/bin/docker-compose
     mode: 0755
 
-- name: prepare directories for Harbor
+- name: prepare directories(/data) for Harbor 0
   file:
     path: "{{ item }}"
     state: directory
-    owner: 10000
-    group: 10000
+    owner: root
+    group: root
   with_items:
-    - /data/redis
+    - /data/secret
+    - /data/trivy-adapter
+  
+- name: prepare directories(/data) for Harbor 1
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: '10000'
+    group: '10000'
+  with_items:
+    - /data/ca_download
+    - /data/chart_storage
+    - /data/job_logs
+    - /data/registry
     - /data/secret/core
     - /data/secret/keys
     - /data/secret/registry
-    - /opt/app/conf/adminserver
-    - /opt/app/conf/db
+    - /data/trivy-adapter/trivy
+    - /data/trivy-adapter/reports
 
-- name: protect binaries and configurations
+- name: prepare directories(/data) for Harbor 2
   file:
-    path: /opt/app/conf/{{ item }}
-    mode: u=rwx,g=rx,o=
-    owner: 0
-    group: 10000
-    recurse: yes
+    path: "{{ item }}"
+    state: directory
+    owner: '999'
+    group: '999'
   with_items:
-    - chartserver
-    - core
-    - db
-    - jobservice
+    - /data/database
+    - /data/redis
+
+- name: prepare config dirs(/opt/app/conf) for Harbor 0
+  file:
+    path: /opt/app/current/conf/{{ item }}
+    mode: u=rwx,g=rx,o=
+    owner: root
+    group: root
+  with_items:
     - log
-    - nginx
+
+- name: prepare config dirs(/opt/app/conf) for Harbor 1
+  file:
+    path: /opt/app/current/conf/{{ item }}
+    mode: u=rwx,g=rx,o=
+    owner: '10000'
+    group: '10000'
+  with_items:
+    - jobservice
+    - portal
+    - nginx/conf.d
+
+- name: prepare config dirs(/opt/app/conf) for Harbor 2
+  file:
+    path: /opt/app/current/conf/{{ item }}
+    mode: u=rwx,g=rx,o=rx
+  with_items:
     - registry
     - registryctl
+    - shared/trust-certificates
+    - nginx
 
-- name: fix permission issue
+- name: prepare config dirs(/opt/app/conf) for Harbor 3
   file:
-    path: /{{ file_path }}
-    owner: 999
-    group: 999
-    recurse: yes
-  loop:
-    - /opt/app/conf/redis/
-    - /data/redis/
-  loop_control:
-    loop_var: file_path
+    path: /opt/app/current/conf/{{ item }}
+    mode: u=rw,g=r,o=
+    owner: '10000'
+    group: '10000'
+  with_items:
+    - log/logrotate.conf
+    - log/rsyslog_docker.conf
+    - portal/nginx.conf
+    - nginx/nginx.conf
+    - jobservice/config.yml
 
 - name: install harbor service
   copy:
@@ -174,15 +217,17 @@
     masked: yes
     state: stopped
 
-- name: Give secure permissions to logrotate
-  file:
-    path: /opt/app/conf/log/logrotate.conf
-    owner: root
-    group: root
-    mode: '644'
-
 - name: generate key for web/job node
   shell: |
       openssl genrsa -out /data/secret/core/private_key.pem 4096
       openssl req -new -x509 -key /data/secret/core/private_key.pem -subj '/C=CN/ST=Beijing/O=QingCloud/OU=AppCenter/CN=Harbor' -out /data/secret/registry/root.crt -days 3650
 
+- name: set key-file permission
+  file:
+      path: /data/secret/{{ item }}
+      mode: u=rw,g=,o=
+      owner: '10000'
+      group: '10000'
+  with_items:
+    - core/private_key.pem
+    - registry/root.crt

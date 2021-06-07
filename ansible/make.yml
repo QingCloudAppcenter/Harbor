@@ -3,17 +3,18 @@
   hosts: all
   vars:
     target_env: "{{ lookup('env', 'target') }}"
+    local_cache_path: "/root/.ansible/cache"
+    app_version: 1.6.0
   tasks:
   - include_role:
       name: "{{ name }}"
     loop:
     - disable-apt-jobs-1.0.0
     - disable-motd-1.0.0
-    - app-agent-1.0.1
-    - appctl-1.0.7
-    - arping-1.0.0
-    - caddy-1.0.6
-    - jq-1.0.3
+    - appctl-1.2.7
+    - arping-1.0.5
+    - caddy-1.1.8
+    - jq-1.0.9
     - harbor
     loop_control:
       loop_var: name

@@ -2,20 +2,15 @@
   "name": {{cluster.name}},
   "description": {{cluster.description}},
   "upgrade_policy": [
-    "appv-l0d1tgn2",
-    "appv-tkc5qnwg",
-    "appv-z7hy8rjy",
-    "appv-lqqfiy30",
-    "appv-p3qbt6y6",
-    "appv-utedkwla"
+    
   ],
   "vxnet": {{cluster.vxnet}},
   "nodes": [{
     "role": "log_node",
     "container": {
       "type": "kvm",
-      "zone": "pek3a",
-      "image": "img-omp9djvq"
+      "zone": "pek3",
+      "image": "img-765oo5tu"
     },
     "instance_class": {{cluster.log_node.instance_class}},
     "count": 1,
@@ -67,8 +62,8 @@
     "role": "storage_node",
     "container": {
       "type": "kvm",
-      "zone": "pek3a",
-      "image": "img-omp9djvq"
+      "zone": "pek3",
+      "image": "img-765oo5tu"
     },
     "instance_class": {{cluster.storage_node.instance_class}},
     "count": {{cluster.storage_node.count}},
@@ -107,8 +102,8 @@
     "role": "db_node",
     "container": {
       "type": "kvm",
-      "zone": "pek3a",
-      "image": "img-omp9djvq"
+      "zone": "pek3",
+      "image": "img-765oo5tu"
     },
     "instance_class": {{cluster.db_node.instance_class}},
     "count": 1,
@@ -156,8 +151,8 @@
     "role": "cache_node",
     "container": {
       "type": "kvm",
-      "zone": "pek3a",
-      "image": "img-omp9djvq"
+      "zone": "pek3",
+      "image": "img-765oo5tu"
     },
     "instance_class": {{cluster.cache_node.instance_class}},
     "count": 1,
@@ -189,8 +184,8 @@
     "role": "web_node",
     "container": {
       "type": "kvm",
-      "zone": "pek3a",
-      "image": "img-omp9djvq"
+      "zone": "pek3",
+      "image": "img-765oo5tu"
     },
     "instance_class": {{cluster.web_node.instance_class}},
     "count": {{cluster.web_node.count}},
@@ -228,14 +223,15 @@
       "QS_ZONE": {{env.QS_ZONE}},
       "QS_URL": {{env.QS_URL}},
       "s3.url.used": {{env.s3.url.used}},
-      "QS_ROOT_DIRECTORY": {{env.QS_ROOT_DIRECTORY}}
+      "QS_ROOT_DIRECTORY": {{env.QS_ROOT_DIRECTORY}},
+      "trivy.enabled": {{env.trivy.enabled}}
     }
   }, {
     "role": "job_node",
     "container": {
       "type": "kvm",
-      "zone": "pek3a",
-      "image": "img-omp9djvq"
+      "zone": "pek3",
+      "image": "img-765oo5tu"
     },
     "instance_class": {{cluster.job_node.instance_class}},
     "count": {{cluster.job_node.count}},
@@ -272,7 +268,8 @@
       "QS_ZONE": {{env.QS_ZONE}},
       "QS_URL": {{env.QS_URL}},
       "s3.url.used": {{env.s3.url.used}},
-      "QS_ROOT_DIRECTORY": {{env.QS_ROOT_DIRECTORY}}
+      "QS_ROOT_DIRECTORY": {{env.QS_ROOT_DIRECTORY}},
+      "trivy.enabled": {{env.trivy.enabled}}
     }
   }],
   "health_check": {

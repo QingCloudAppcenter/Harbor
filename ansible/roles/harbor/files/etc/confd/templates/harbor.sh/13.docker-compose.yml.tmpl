@@ -1,18 +1,17 @@
-cat > /opt/app/conf/docker-compose.yml << DOCKER_COMPOSE_FILE
+tmpstr=$(resolvectl | grep -o '[[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+' | uniq | sed 's/^/      - /')
+cat > /opt/app/current/conf/docker-compose.yml << DOCKER_COMPOSE_FILE
 version: '2.3'
 services:
   {{- if eq $nodeRole "log" }}
   log:
     image: goharbor/harbor-log:\$HARBOR_VERSION
-    container_name: log
+    container_name: harbor-log
     restart: always
-    networks:
-      - harbor
     dns_search: .
+    dns:
+$tmpstr
     healthcheck:
       test: netstat -ltun | grep 10514
-    ports:
-      - 1514:10514
     cap_drop:
       - ALL
     cap_add:
@@ -22,7 +21,16 @@ services:
       - SETUID
     volumes:
       - /var/log/harbor/:/var/log/docker/:z
-      - ./log/rsyslog.conf:/etc/rsyslog.d/rsyslog_docker.conf:z
+      - type: bind
+        source: ./log/logrotate.conf
+        target: /etc/logrotate.d/logrotate.conf
+      - type: bind
+        source: ./log/rsyslog_docker.conf
+        target: /etc/rsyslog.d/rsyslog_docker.conf
+    ports:
+      - 1514:10514
+    networks:
+      - harbor
     logging:
       driver: "syslog"
       options:
@@ -41,14 +49,13 @@ services:
       - SETUID
     volumes:
       - /data/redis:/var/lib/redis
-      - ./redis/redis.conf:/etc/redis.conf
     networks:
       - harbor
-    dns_search: .
-    healthcheck:
-      test: netstat -ltun | grep 6379
     ports:
       - 6379:6379
+    dns_search: .
+    dns:
+$tmpstr
     logging:
       driver: "syslog"
       options:
@@ -58,9 +65,7 @@ services:
   {{- if eq $nodeRole "db" }}
   postgresql:
     image: goharbor/harbor-db:\$HARBOR_VERSION
-    container_name: db
-    env_file:
-      - ./db/env
+    container_name: harbor-db
     restart: always
     cap_drop:
       - ALL
@@ -70,21 +75,25 @@ services:
       - SETGID
       - SETUID
     volumes:
-      - /data/database/app-1.2.0:/var/lib/postgresql/data:z
+      - /data/database/harbor-\$HARBOR_VERSION:/var/lib/postgresql/data:z
     networks:
-      - harbor
-    dns_search: .
+      harbor:
     ports:
       - 5432:5432
+    dns_search: .
+    dns:
+$tmpstr
+    env_file:
+      - ./db/env
     logging:
       driver: "syslog"
       options:
         syslog-address: "tcp://log:1514"
-        tag: "db.postgres"
+        tag: "db.postgresql"
   {{- end }}
   {{- range getvs "/host/role" | filter "web|job" }}
   registry:
-    image: goharbor/registry-photon:v2.7.1-patch-2819-2553-\$HARBOR_VERSION
+    image: goharbor/registry-photon:\$HARBOR_VERSION
     container_name: registry
     restart: always
     cap_drop:
@@ -94,14 +103,21 @@ services:
       - SETGID
       - SETUID
     volumes:
-      - dataDir:/storage
+      - dataDir:/storage:z
       - ./registry/:/etc/registry/:z
-      - /data/secret/registry/root.crt:/etc/registry/root.crt:z
+      - type: bind
+        source: /data/secret/registry/root.crt
+        target: /etc/registry/root.crt
+      - type: bind
+        source: ./shared/trust-certificates
+        target: /harbor_cust_cert
     networks:
       - harbor
     dns_search: .
+    dns:
+$tmpstr
     extra_hosts:
-      - redis:{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }}{{ end }}
+      - 'redis:{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }}{{ end }}'
     logging:
       driver: "syslog"
       options:
@@ -120,12 +136,19 @@ services:
       - SETGID
       - SETUID
     volumes:
-      - dataDir:/storage
+      - dataDir:/storage:z
       - ./registry/:/etc/registry/:z
-      - ./registryctl/config.yml:/etc/registryctl/config.yml:z
+      - type: bind
+        source: ./registryctl/config.yml
+        target: /etc/registryctl/config.yml
+      - type: bind
+        source: ./shared/trust-certificates
+        target: /harbor_cust_cert
     networks:
       - harbor
     dns_search: .
+    dns:
+$tmpstr
     logging:
       driver: "syslog"
       options:
@@ -133,7 +156,7 @@ services:
         tag: "{{ $nodeRole }}.registryctl"
   core:
     image: goharbor/harbor-core:\$HARBOR_VERSION
-    container_name: core
+    container_name: harbor-core
     env_file:
       - ./core/env
     restart: always
@@ -144,21 +167,38 @@ services:
       - SETUID
     volumes:
       - /data/ca_download/:/etc/core/ca/:z
-      - /data/psc/:/etc/core/token/:z
       - /data/:/data/:z
-      - dataDir:/data/registry
       - ./core/certificates/:/etc/core/certificates/:z
-      - ./core/app.conf:/etc/core/app.conf:z
-      - /data/secret/core/private_key.pem:/etc/core/private_key.pem:z
-      - /data/secret/keys/secretkey:/etc/core/key:z
+      - type: bind
+        source: ./core/app.conf
+        target: /etc/core/app.conf
+      - type: bind
+        source: /data/secret/core/private_key.pem
+        target: /etc/core/private_key.pem
+      - type: bind
+        source: /data/secret/keys/secretkey
+        target: /etc/core/key
+      - type: bind
+        source: ./shared/trust-certificates
+        target: /harbor_cust_cert
     networks:
-      - harbor
+      harbor:
+      harbor-chartmuseum:
+        aliases:
+          - harbor-core
     dns_search: .
+    dns:
+$tmpstr
     extra_hosts:
-      - redis:{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }}{{ end }}
-      - postgresql:{{ range getvs "/hosts/db_node/*/ip" }}{{ . }}{{ end }}
-      {{- range getvs "/hosts/job_node/*/ip" }}
-      - jobservice:{{ . }}
+      - 'redis:{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }}{{ end }}'
+      - 'postgresql:{{ range getvs "/hosts/db_node/*/ip" }}{{ . }}{{ end }}'
+      {{- if eq $nodeRole "web" }}
+            {{- range getvs "/hosts/job_node/*/ip" }}
+      - 'jobservice:{{ . }}'
+              {{- if eq (getv "/env/trivy.enabled" "true") "true" }}
+      - 'trivy-adapter:{{ . }}'
+              {{- end }}
+            {{- end }}
       {{- end }}
     depends_on:
       - registry
@@ -169,9 +209,7 @@ services:
         tag: "{{ $nodeRole }}.core"
   chartmuseum:
     container_name: chartmuseum
-    image: goharbor/chartmuseum-photon:v0.9.0-\$HARBOR_VERSION
-    env_file:
-      ./chartserver/env
+    image: goharbor/chartmuseum-photon:\$HARBOR_VERSION
     restart: always
     cap_drop:
       - ALL
@@ -181,55 +219,67 @@ services:
       - SETGID
       - SETUID
     networks:
-      - harbor
+      - harbor-chartmuseum
     dns_search: .
+    dns:
+$tmpstr
     extra_hosts:
-      - redis:{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }}{{ end }}
+      - "redis:{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }}{{ end }}"
     volumes:
       {{- if len (ls "/hosts/storage_node") }}
-      - dataDir:/chart_storage
+      - dataDir:/chart_storage:z
       {{- end }}
-      - ./chartserver/docker-entrypoint.sh:/docker-entrypoint.sh:z
       - ./chartserver:/etc/chartserver:z
+      - type: bind
+        source: ./shared/trust-certificates
+        target: /harbor_cust_cert
     logging:
       driver: "syslog"
       options:
         syslog-address: "tcp://log:1514"
         tag: "{{ $nodeRole }}.chartmuseum"
+    env_file:
+      ./chartserver/env
   {{- end }}
   {{- if eq $nodeRole "job" }}
-  clair:
-    container_name: clair
-    image: goharbor/clair-photon:v2.1.0-\$HARBOR_VERSION
+    {{- if eq (getv "/env/trivy.enabled" "true") "true" }}
+  trivy-adapter:
+    container_name: trivy-adapter
+    image: goharbor/trivy-adapter-photon:\$HARBOR_VERSION
     restart: always
+    healthcheck:
+      test: curl --fail -s http://127.0.0.1:8081/probe/healthy || curl -k --fail -s https://127.0.0.1:8443/probe/healthy || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 3
     cap_drop:
       - ALL
-    cap_add:
-      - DAC_OVERRIDE
-      - SETGID
-      - SETUID
+    dns_search: .
+    dns:
+$tmpstr
+    extra_hosts:
+      - "redis:{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }}{{ end }}"
     networks:
       - harbor
-    cpu_quota: 50000
-    dns_search: .
-    extra_hosts:
-      - "log:{{ range getvs "/hosts/log_node/*/ip" }}{{ . }}{{ end }}"
-      - "redis:{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }}{{ end }}"
-      - "postgresql:{{ range getvs "/hosts/db_node/*/ip" }}{{ . }}{{ end }}"
+    ports:
+      - 8081:8081
     volumes:
+      - trivyDataTrivy:/home/scanner/.cache/trivy
+      - trivyDataReports:/home/scanner/.cache/reports
       - type: bind
-        source: /opt/app/conf/clair/config.yaml
-        target: /etc/clair/config.yaml
-    env_file:
-      /opt/app/conf/clair/clair_env
+        source: ./shared/trust-certificates
+        target: /harbor_cust_cert
     logging:
       driver: "syslog"
       options:
         syslog-address: "tcp://log:1514"
-        tag: "job.clair"
+        tag: "job.trivy-adapter"
+    env_file:
+      ./trivy-adapter/env
+    {{- end }}
   jobservice:
     image: goharbor/harbor-jobservice:\$HARBOR_VERSION
-    container_name: jobservice
+    container_name: harbor-jobservice
     env_file:
       - ./jobservice/env
     restart: always
@@ -240,16 +290,23 @@ services:
       - SETGID
       - SETUID
     volumes:
-      - jobLogs:/var/log/jobs
-      - ./jobservice/config.yml:/etc/jobservice/config.yml:z
+      - jobLogs:/var/log/jobs:z
+      - type: bind
+        source: ./jobservice/config.yml
+        target: /etc/jobservice/config.yml
+      - type: bind
+        source: ./shared/trust-certificates
+        target: /harbor_cust_cert
     networks:
       - harbor
-    dns_search: .
     ports:
       - 8080:8080
+    dns_search: .
+    dns:
+$tmpstr
     extra_hosts:
-      - redis:{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }}{{ end }}
-      - postgresql:{{ range getvs "/hosts/db_node/*/ip" }}{{ . }}{{ end }}
+      - "redis:{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }}{{ end }}"
+      - "postgresql:{{ range getvs "/hosts/db_node/*/ip" }}{{ . }}{{ end }}"
     depends_on:
       - core
     logging:
@@ -261,7 +318,7 @@ services:
   {{- if eq $nodeRole "web" }}
   portal:
     image: goharbor/harbor-portal:\$HARBOR_VERSION
-    container_name: portal
+    container_name: harbor-portal
     restart: always
     cap_drop:
       - ALL
@@ -270,11 +327,15 @@ services:
       - SETGID
       - SETUID
       - NET_BIND_SERVICE
+    volumes:
+      - type: bind
+        source: ./portal/nginx.conf
+        target: /etc/nginx/nginx.conf
     networks:
       - harbor
     dns_search: .
-    depends_on:
-      - core
+    dns:
+$tmpstr
     logging:
       driver: "syslog"
       options:
@@ -293,9 +354,14 @@ services:
       - NET_BIND_SERVICE
     volumes:
       - ./nginx:/etc/nginx:z
+      - type: bind
+        source: ./shared/trust-certificates
+        target: /harbor_cust_cert
     networks:
       - harbor
     dns_search: .
+    dns:
+$tmpstr
     ports:
       - 80:8080
     depends_on:
@@ -308,6 +374,19 @@ services:
         syslog-address: "tcp://log:1514"
         tag: "web.proxy"
   {{- end }}
+networks:
+  harbor:
+    external: false
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.18.0.0/16
+  harbor-chartmuseum:
+    external: false
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.19.0.0/16
 {{- range getvs "/host/role" | filter "web|job" }}
 volumes:
   dataDir:
@@ -329,13 +408,18 @@ volumes:
       type: nfs4
       o: addr={{ range getvs "/hosts/log_node/*/ip" }}{{ . }}{{ end }},rw
       device: ":/var/log/harbor/job-logs"
+  trivyDataTrivy:
+    driver: local
+    driver_opts:
+      type: nfs4
+      o: addr={{ range getvs "/hosts/log_node/*/ip" }}{{ . }}{{ end }},rw
+      device: ":/var/log/harbor/trivy-data/trivy"
+  trivyDataReports:
+    driver: local
+    driver_opts:
+      type: nfs4
+      o: addr={{ range getvs "/hosts/log_node/*/ip" }}{{ . }}{{ end }},rw
+      device: ":/var/log/harbor/trivy-data/reports"
   {{- end }}
 {{- end }}
-networks:
-  harbor:
-    external: false
-    ipam:
-      driver: default
-      config:
-        - subnet: 172.18.0.0/16
 DOCKER_COMPOSE_FILE
