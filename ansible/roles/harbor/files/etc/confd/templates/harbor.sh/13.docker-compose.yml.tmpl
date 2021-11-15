@@ -1,4 +1,4 @@
-tmpstr=$(resolvectl | grep -o '[[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+' | uniq | sed 's/^/      - /')
+tmpstr=$(resolvectl | grep -o '[[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+' | awk '!x[$0]++' | sed 's/^/      - /')
 cat > /opt/app/current/conf/docker-compose.yml << DOCKER_COMPOSE_FILE
 version: '2.3'
 services:

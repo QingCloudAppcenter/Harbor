@@ -1,0 +1,71 @@
+{
+    "patch_policy": [""],
+    "patch_nodes": [{
+        "container": {
+            "snapshot": "ss-u6lhreye",
+            "zone": "pek3"
+        },
+        "patch": [{
+            "mount_role": "log_node",
+            "mount_point": "/appcenter-patch",
+            "mount_options": "defaults,noatime",
+            "filesystem": "ext4",
+            "cmd": "/appcenter-patch/helper.sh patch"
+        },{
+            "mount_role": "db_node",
+            "mount_point": "/appcenter-patch",
+            "mount_options": "defaults,noatime",
+            "filesystem": "ext4",
+            "cmd": "/appcenter-patch/helper.sh patch"
+        },{
+            "mount_role": "cache_node",
+            "mount_point": "/appcenter-patch",
+            "mount_options": "defaults,noatime",
+            "filesystem": "ext4",
+            "cmd": "/appcenter-patch/helper.sh patch"
+        },{
+            "mount_role": "web_node",
+            "mount_point": "/appcenter-patch",
+            "mount_options": "defaults,noatime",
+            "filesystem": "ext4",
+            "cmd": "/appcenter-patch/helper.sh patch"
+        },{
+            "mount_role": "job_node",
+            "mount_point": "/appcenter-patch",
+            "mount_options": "defaults,noatime",
+            "filesystem": "ext4",
+            "cmd": "/appcenter-patch/helper.sh patch"
+        }],
+        "rollback": [{
+            "mount_role": "log_node",
+            "mount_point": "/appcenter-patch",
+            "mount_options": "defaults,noatime",
+            "filesystem": "ext4",
+            "cmd": "/appcenter-patch/helper.sh rollback"
+        },{
+            "mount_role": "db_node",
+            "mount_point": "/appcenter-patch",
+            "mount_options": "defaults,noatime",
+            "filesystem": "ext4",
+            "cmd": "/appcenter-patch/helper.sh rollback"
+        },{
+            "mount_role": "cache_node",
+            "mount_point": "/appcenter-patch",
+            "mount_options": "defaults,noatime",
+            "filesystem": "ext4",
+            "cmd": "/appcenter-patch/helper.sh rollback"
+        },{
+            "mount_role": "web_node",
+            "mount_point": "/appcenter-patch",
+            "mount_options": "defaults,noatime",
+            "filesystem": "ext4",
+            "cmd": "/appcenter-patch/helper.sh rollback"
+        },{
+            "mount_role": "job_node",
+            "mount_point": "/appcenter-patch",
+            "mount_options": "defaults,noatime",
+            "filesystem": "ext4",
+            "cmd": "/appcenter-patch/helper.sh rollback"
+        }]
+    }]
+}

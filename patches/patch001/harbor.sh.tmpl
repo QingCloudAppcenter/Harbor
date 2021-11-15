@@ -1,0 +1,798 @@
+#!/usr/bin/env bash
+
+myPath="$0"
+
+cleanUp() {
+  local rc=$?
+  [ "$rc" -eq 0 ] || echo "# Failed ($rc)! Please check confd logs." >> $myPath
+  return $rc
+}
+
+trap cleanUp EXIT
+
+rotate() {
+  local path=$1 maxFilesCount=5
+  for i in $(seq 1 $maxFilesCount | tac); do
+    if [ -f "${path}.$i" ]; then mv ${path}.$i ${path}.$(($i+1)); fi
+  done
+  if [ -f "$path" ]; then cp $path ${path}.1; fi
+}
+
+flush() {
+  local targetFile=$1
+  if [ -n "$targetFile" ]; then
+    rotate $targetFile
+    cat > $targetFile -
+  else
+    cat -
+  fi
+}
+
+applyEnvs() {
+  local f; for f in $(find /opt/app/current/bin/envs/ -name appdev.env -o -name confd.env); do . $f; done
+}
+
+applyScripts() {
+  local f; for f in $(find /opt/app/current/bin/node/ -name confd*.sh); do . $f; done
+}
+
+applyEnvs
+applyScripts
+
+set -eo pipefail
+if [ "$APPCTL_ENV" == "dev" ]; then set -x; fi
+
+{{- $nodeRole := index (split (getv "/host/role") "_node") 0 }}
+
+flush > /opt/app/current/bin/envs/node.env << NODE_ENV_FILE
+NODE_CTL=all
+MY_SID={{ getv "/host/sid" }}
+MY_IP={{ getv "/host/ip" }}
+MY_ROLE={{ $nodeRole }}
+{{- if eq $nodeRole "log" }}
+DATA_MOUNTS="/var/log/harbor"
+SERVICES="\$SERVICES  nfs-server/{{ if len (ls "/hosts/job_node") }}true{{ else }}false{{ end }}/tcp:111 harbor/true/tcp:1514 "
+{{- else if eq $nodeRole "storage" }}
+SERVICES="\$SERVICES nfs-server/true/tcp:111"
+DATA_MOUNTS="/data/registry"
+{{- else if eq $nodeRole "cache" }}
+SERVICES="\$SERVICES harbor/true/tcp:6379"
+DATA_MOUNTS=""
+{{- else if eq $nodeRole "db" }}
+SERVICES="\$SERVICES harbor/true/tcp:5432"
+DATA_MOUNTS="/data/database"
+{{- else if eq $nodeRole "web" }}
+SERVICES="\$SERVICES harbor/true/http:80"
+DATA_MOUNTS=""
+{{- else if eq $nodeRole "job" }}
+SERVICES="\$SERVICES harbor/true/http:8080"
+DATA_MOUNTS=""
+{{- end }}
+
+{{- range getvs "/host/role" | filter "web|job" }}
+{{- range getvs "/hosts/storage_node/*/ip" }}
+STORAGE_NODE_IP={{ . }}
+{{- end }}
+{{- range getvs "/hosts/log_node/*/ip" }}
+LOG_NODE_IP={{ . }}
+{{- end }}
+{{- end }}
+NODE_ENV_FILE
+
+{{- if eq $nodeRole "db" }}
+
+encrypted=$(echo -n {{ getv "/cluster/user_id" }}{{ getv "/cluster/global_uuid" }} | sha256sum | base64)
+dbPassword=${encrypted:16:16}
+
+flush > /opt/app/current/conf/db/env << DB_ENV_FILE
+POSTGRES_PASSWORD=$dbPassword
+DB_ENV_FILE
+
+{{- end }}
+{{- range getvs "/host/role" | filter "web|job" }}
+encrypted=$(echo -n {{ getv "/cluster/cluster_id" }}{{ getv "/cluster/global_uuid" }} | sha256sum | base64)
+coreSecret=${encrypted:0:16}
+encrypted=$(echo -n {{ getv "/cluster/user_id" }}{{ getv "/cluster/global_uuid" }} | sha256sum | base64)
+redisPassword=${encrypted:0:16}
+
+flush > /opt/app/current/conf/chartserver/env << CHART_SERVER_ENV_EOF
+## Settings should be set
+PORT=9999
+
+# Only support redis now. If redis is setup, then enable cache
+CACHE=redis
+CACHE_REDIS_ADDR=redis:6379
+CACHE_REDIS_PASSWORD=
+CACHE_REDIS_DB=3
+
+# Credential for internal communication
+BASIC_AUTH_USER=chart_controller
+BASIC_AUTH_PASS=
+
+# Multiple tenants
+# Must be set with 1 to support project namespace
+DEPTH=1
+
+# Backend storage driver: e.g. "local", "amazon", "google" etc.
+{{- if len (ls "/hosts/storage_node") }}
+STORAGE=local
+STORAGE_LOCAL_ROOTDIR=/chart_storage
+{{- else }}
+STORAGE=amazon
+STORAGE_AMAZON_BUCKET={{ getv "/env/QS_BUCKET" }}
+STORAGE_AMAZON_PREFIX={{ getv "/env/QS_ROOT_DIRECTORY" "" }}
+{{- $qsRegion := getv "/env/QS_ZONE" "pek3a" }}
+STORAGE_AMAZON_REGION={{ $qsRegion }}
+{{- if eq (getv "/env/s3.url.used" "false") "true" }}
+STORAGE_AMAZON_ENDPOINT={{ getv "/env/QS_URL" }}
+{{- else }}
+{{- $qsUrl := split (getv "/env/QS_URL") "://" }}
+STORAGE_AMAZON_ENDPOINT={{ index $qsUrl 0}}://s3.{{ $qsRegion }}.{{ index $qsUrl 1 }}
+{{- end }}
+AWS_ACCESS_KEY_ID={{ getv "/env/QS_ACCESS" }}
+AWS_SECRET_ACCESS_KEY={{ getv "/env/QS_SECRET" }}
+{{- end }}
+
+## Settings with default values. Just put here for future changes
+DEBUG=false
+LOG_JSON=true
+DISABLE_METRICS=false
+DISABLE_API=false
+DISABLE_STATEFILES=false
+ALLOW_OVERWRITE=true
+CHART_URL=
+AUTH_ANONYMOUS_GET=false
+CONTEXT_PATH=
+INDEX_LIMIT=0
+MAX_STORAGE_OBJECTS=0
+MAX_UPLOAD_SIZE=20971520
+CHART_POST_FORM_FIELD_NAME=chart
+PROV_POST_FORM_FIELD_NAME=prov
+STORAGE_TIMESTAMP_TOLERANCE=1s
+CHART_SERVER_ENV_EOF
+{{- end }}
+
+{{- range getvs "/host/role" | filter "web|job" }}
+
+encrypted=$(echo -n {{ getv "/cluster/cluster_id" }}{{ getv "/cluster/global_uuid" }} | sha256sum | base64)
+coreSecret=${encrypted:0:16}
+jobSecret=${encrypted:16:16}
+encrypted=$(echo -n {{ getv "/cluster/user_id" }}{{ getv "/cluster/global_uuid" }} | sha256sum | base64)
+redisPassword=${encrypted:0:16}
+dbPassword=${encrypted:16:16}
+registryPassword=${encrypted:32:16}
+encrypted=$(echo -n {{ getv "/cluster/cluster_id" }}{{ getv "/cluster/global_uuid" }} | sha1sum | base64)
+xsrfKey=${encrypted:0:32}
+
+flush > /opt/app/current/conf/core/env << CORE_ENV_FILE
+CONFIG_PATH=/etc/core/app.conf
+UAA_CA_ROOT=/etc/core/certificates/uaa_ca.pem
+_REDIS_URL_CORE=redis://redis:6379?idle_timeout_seconds=30
+SYNC_QUOTA=true
+CHART_CACHE_DRIVER=redis
+_REDIS_URL_REG=redis://redis:6379/1?idle_timeout_seconds=30
+
+LOG_LEVEL=info
+EXT_ENDPOINT={{ getv "/env/HARBOR_HOST" }}
+DATABASE_TYPE=postgresql
+POSTGRESQL_HOST=postgresql
+POSTGRESQL_PORT=5432
+POSTGRESQL_USERNAME=postgres
+POSTGRESQL_PASSWORD=$dbPassword
+POSTGRESQL_DATABASE=registry
+POSTGRESQL_SSLMODE=disable
+POSTGRESQL_MAX_IDLE_CONNS=50
+POSTGRESQL_MAX_OPEN_CONNS=1000
+REGISTRY_URL=http://registry:5000
+PORTAL_URL=http://portal:8080
+TOKEN_SERVICE_URL=http://core:8080/service/token
+HARBOR_ADMIN_PASSWORD=Harbor12345
+MAX_JOB_WORKERS=10
+CORE_SECRET=$coreSecret
+JOBSERVICE_SECRET=$jobSecret
+WITH_NOTARY=False
+{{- if eq (getv "/env/trivy.enabled" "true") "true" }}
+WITH_TRIVY=True
+{{- else }}
+WITH_TRIVY=False
+{{- end }}
+CORE_URL=http://core:8080
+CORE_LOCAL_URL=http://127.0.0.1:8080
+JOBSERVICE_URL=http://jobservice:8080
+TRIVY_ADAPTER_URL=http://trivy-adapter:8081
+NOTARY_URL=http://notary-server:4443
+REGISTRY_STORAGE_PROVIDER_NAME={{ if len (ls "/hosts/storage_node") }}filesystem{{ else }}s3{{ end }}
+READ_ONLY=false
+RELOAD_KEY=
+CHART_REPOSITORY_URL=http://chartmuseum:9999
+REGISTRY_CONTROLLER_URL=http://registryctl:8080
+WITH_CHARTMUSEUM=True
+REGISTRY_CREDENTIAL_USERNAME=harbor_registry_user
+REGISTRY_CREDENTIAL_PASSWORD=$registryPassword
+CSRF_KEY=$xsrfKey
+PERMITTED_REGISTRY_TYPES_FOR_PROXY_CACHE=docker-hub,harbor,azure-acr,aws-ecr,google-gcr,quay
+
+HTTP_PROXY=
+HTTPS_PROXY=
+NO_PROXY=log,127.0.0.1,core,exporter,postgresql,.internal,db,portal,.local,registry,notary-server,chartmuseum,notary-signer,trivy-adapter,redis,jobservice,registryctl,localhost,nginx
+
+PORT=8080
+CORE_ENV_FILE
+{{- end }}
+
+{{- range getvs "/host/role" | filter "web|job" }}
+
+encrypted=$(echo -n {{ getv "/cluster/cluster_id" }}{{ getv "/cluster/global_uuid" }} | sha256sum | base64)
+coreSecret=${encrypted:0:16}
+jobSecret=${encrypted:16:16}
+
+flush > /opt/app/current/conf/registryctl/env << REGISTRYCTL_ENV_FILE
+CORE_SECRET=$coreSecret
+JOBSERVICE_SECRET=$jobSecret
+REGISTRYCTL_ENV_FILE
+{{- end }}
+
+{{- if eq $nodeRole "job" }}
+
+encrypted=$(echo -n {{ getv "/cluster/cluster_id" }}{{ getv "/cluster/global_uuid" }} | sha256sum | base64)
+coreSecret=${encrypted:0:16}
+jobSecret=${encrypted:16:16}
+
+encrypted=$(echo -n {{ getv "/cluster/user_id" }}{{ getv "/cluster/global_uuid" }} | sha256sum | base64)
+registryPassword=${encrypted:32:16}
+
+flush > /opt/app/current/conf/jobservice/env << JOBSERVICE_ENV_FILE
+CORE_SECRET=$coreSecret
+REGISTRY_URL=http://registry:5000
+JOBSERVICE_SECRET=$jobSecret
+CORE_URL=http://core:8080
+REGISTRY_CONTROLLER_URL=http://registryctl:8080
+JOBSERVICE_WEBHOOK_JOB_MAX_RETRY=10
+
+
+HTTP_PROXY=
+HTTPS_PROXY=
+NO_PROXY=log,127.0.0.1,core,exporter,postgresql,.internal,db,portal,.local,registry,notary-server,chartmuseum,notary-signer,trivy-adapter,redis,jobservice,registryctl,localhost,nginx
+REGISTRY_CREDENTIAL_USERNAME=harbor_registry_user
+REGISTRY_CREDENTIAL_PASSWORD=$registryPassword
+JOBSERVICE_ENV_FILE
+
+chown 10000:10000 /opt/app/current/conf/jobservice/env
+{{- end }}
+
+{{- if ne $nodeRole "log" }}
+hostsFile=/etc/hosts
+sed "/^# >> Harbor nodes./,/^# << Harbor nodes./d" $hostsFile > $hostsFile.swap
+flush >> $hostsFile.swap << HOSTS_FILE
+
+# >> Harbor nodes. WARNING: this is managed by script and please don't touch manually.
+{{ range getvs "/hosts/log_node/*/ip" }}{{ . }} log{{ end }}
+
+{{- range getvs "/host/role" | filter "web|job" }}
+{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }} redis{{ end }}
+{{ range getvs "/hosts/db_node/*/ip" }}{{ . }} postgresql{{ end }}
+{{- end }}
+
+{{- if eq $nodeRole "web" }}
+{{ range getvs "/hosts/job_node/*/ip" }}{{ . }} jobservice{{ end }}
+{{- end }}
+# << Harbor nodes. WARNING: this is managed by script and please don't touch manually.
+
+HOSTS_FILE
+mv $hostsFile.swap $hostsFile
+{{- end }}
+
+{{- if eq $nodeRole "storage" }}
+exportsDir=/opt/app/current/conf/nfs-server
+flush > $exportsDir/exports << EXPORTS_FILE
+/data/registry	{{ range ls "/hosts" | filter "(web|job)_node" }}{{ range getvs (printf "/hosts/%s/*/ip" .) }}{{ . }}(rw,sync,no_root_squash,no_subtree_check) {{ end }}{{ end }}
+EXPORTS_FILE
+{{- end }}
+
+
+{{- if eq $nodeRole "log" }}
+flush > /opt/app/current/conf/nfs-server/exports << LOG_EXPORTS_ENV
+/var/log/harbor/job-logs {{ range getvs "/hosts/job_node/*/ip" }}{{ . }}(rw,sync,no_root_squash,no_subtree_check)  {{ end }}
+/var/log/harbor/trivy-data/trivy {{ range getvs "/hosts/job_node/*/ip" }}{{ . }}(rw,sync,no_root_squash,no_subtree_check)  {{ end }}
+/var/log/harbor/trivy-data/reports {{ range getvs "/hosts/job_node/*/ip" }}{{ . }}(rw,sync,no_root_squash,no_subtree_check)  {{ end }}
+LOG_EXPORTS_ENV
+{{- end }}
+
+{{- range getvs "/host/role" | filter "web|job" }}
+encrypted=$(echo -n {{ getv "/cluster/user_id" }}{{ getv "/cluster/global_uuid" }} | sha256sum | base64)
+redisPassword=${encrypted:0:16}
+registryPassword=${encrypted:32:16}
+htpasswd -nbB harbor_registry_user $registryPassword > /opt/app/current/conf/registry/passwd
+
+flush > /opt/app/current/conf/registry/config.yml << REGISTRY_CONF_FILE
+version: 0.1
+log:
+  level: info
+  fields:
+    service: registry
+storage:
+  cache:
+    layerinfo: redis
+  {{- if len (ls "/hosts/storage_node") }}
+  filesystem:
+    rootdirectory: /storage
+  {{- else }}
+  s3:
+    accesskey: {{ getv "/env/QS_ACCESS" }}
+    secretkey: {{ getv "/env/QS_SECRET" }}
+    {{- $qsRegion := getv "/env/QS_ZONE" "pek3a" }}
+    region: {{ $qsRegion }}
+    {{- if eq (getv "/env/s3.url.used" "false") "true" }}
+    regionendpoint: {{ getv "/env/QS_URL" }}
+    {{- else }}
+    {{- $qsUrl := split (getv "/env/QS_URL") "://" }}
+    regionendpoint: {{ index $qsUrl 0}}://s3.{{ $qsRegion }}.{{ index $qsUrl 1 }}
+    {{- end }}
+    bucket: {{ getv "/env/QS_BUCKET" }}
+    rootdirectory: {{ getv "/env/QS_ROOT_DIRECTORY" "" }}
+  {{- end }}
+  maintenance:
+    uploadpurging:
+      enabled: false
+  delete:
+    enabled: true
+redis:
+  addr: redis:6379
+  readtimeout: 10s
+  writetimeout: 10s
+  dialtimeout: 10s
+  password:
+  db: 1
+http:
+  addr: :5000
+  secret: placeholder
+  debug:
+    addr: localhost:5001
+auth:
+  htpasswd:
+    realm: harbor-registry-basic-realm
+    path: /etc/registry/passwd
+validation:
+  disabled: true
+compatibility:
+  schema1:
+    enabled: true
+REGISTRY_CONF_FILE
+
+chown 10000.10000 /opt/app/current/conf/registry/config.yml
+{{- end }}
+
+{{- range getvs "/host/role" | filter "web|job" }}
+encrypted=$(echo -n {{ getv "/cluster/cluster_id" }}{{ getv "/cluster/user_id" }} | sha256sum | base64)
+echo -n ${encrypted:0:16} > /data/secret/keys/secretkey
+
+chown 10000:10000 /data/secret/keys/secretkey
+chmod 0600 /data/secret/keys/secretkey
+{{- end }}
+
+tmpstr=$(resolvectl | grep -o '[[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+\.[[:digit:]]\+' | awk '!x[$0]++' | sed 's/^/      - /')
+cat > /opt/app/current/conf/docker-compose.yml << DOCKER_COMPOSE_FILE
+version: '2.3'
+services:
+  {{- if eq $nodeRole "log" }}
+  log:
+    image: goharbor/harbor-log:\$HARBOR_VERSION
+    container_name: harbor-log
+    restart: always
+    dns_search: .
+    dns:
+$tmpstr
+    healthcheck:
+      test: netstat -ltun | grep 10514
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - SETGID
+      - SETUID
+    volumes:
+      - /var/log/harbor/:/var/log/docker/:z
+      - type: bind
+        source: ./log/logrotate.conf
+        target: /etc/logrotate.d/logrotate.conf
+      - type: bind
+        source: ./log/rsyslog_docker.conf
+        target: /etc/rsyslog.d/rsyslog_docker.conf
+    ports:
+      - 1514:10514
+    networks:
+      - harbor
+    logging:
+      driver: "syslog"
+      options:
+        tag: "harbor.log"
+  {{- end }}
+  {{- if eq $nodeRole "cache" }}
+  redis:
+    image: goharbor/redis-photon:\$HARBOR_VERSION
+    container_name: redis
+    restart: always
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+    volumes:
+      - /data/redis:/var/lib/redis
+    networks:
+      - harbor
+    ports:
+      - 6379:6379
+    dns_search: .
+    dns:
+$tmpstr
+    logging:
+      driver: "syslog"
+      options:
+        syslog-address: "tcp://log:1514"
+        tag: "cache.redis"
+  {{- end }}
+  {{- if eq $nodeRole "db" }}
+  postgresql:
+    image: goharbor/harbor-db:\$HARBOR_VERSION
+    container_name: harbor-db
+    restart: always
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - SETGID
+      - SETUID
+    volumes:
+      - /data/database/harbor-\$HARBOR_VERSION:/var/lib/postgresql/data:z
+    networks:
+      harbor:
+    ports:
+      - 5432:5432
+    dns_search: .
+    dns:
+$tmpstr
+    env_file:
+      - ./db/env
+    logging:
+      driver: "syslog"
+      options:
+        syslog-address: "tcp://log:1514"
+        tag: "db.postgresql"
+  {{- end }}
+  {{- range getvs "/host/role" | filter "web|job" }}
+  registry:
+    image: goharbor/registry-photon:\$HARBOR_VERSION
+    container_name: registry
+    restart: always
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+    volumes:
+      - dataDir:/storage:z
+      - ./registry/:/etc/registry/:z
+      - type: bind
+        source: /data/secret/registry/root.crt
+        target: /etc/registry/root.crt
+      - type: bind
+        source: ./shared/trust-certificates
+        target: /harbor_cust_cert
+    networks:
+      - harbor
+    dns_search: .
+    dns:
+$tmpstr
+    extra_hosts:
+      - 'redis:{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }}{{ end }}'
+    logging:
+      driver: "syslog"
+      options:
+        syslog-address: "tcp://log:1514"
+        tag: "{{ $nodeRole }}.registry"
+  registryctl:
+    image: goharbor/harbor-registryctl:\$HARBOR_VERSION
+    container_name: registryctl
+    env_file:
+      - ./registryctl/env
+    restart: always
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+    volumes:
+      - dataDir:/storage:z
+      - ./registry/:/etc/registry/:z
+      - type: bind
+        source: ./registryctl/config.yml
+        target: /etc/registryctl/config.yml
+      - type: bind
+        source: ./shared/trust-certificates
+        target: /harbor_cust_cert
+    networks:
+      - harbor
+    dns_search: .
+    dns:
+$tmpstr
+    logging:
+      driver: "syslog"
+      options:
+        syslog-address: "tcp://log:1514"
+        tag: "{{ $nodeRole }}.registryctl"
+  core:
+    image: goharbor/harbor-core:\$HARBOR_VERSION
+    container_name: harbor-core
+    env_file:
+      - ./core/env
+    restart: always
+    cap_drop:
+      - ALL
+    cap_add:
+      - SETGID
+      - SETUID
+    volumes:
+      - /data/ca_download/:/etc/core/ca/:z
+      - /data/:/data/:z
+      - ./core/certificates/:/etc/core/certificates/:z
+      - type: bind
+        source: ./core/app.conf
+        target: /etc/core/app.conf
+      - type: bind
+        source: /data/secret/core/private_key.pem
+        target: /etc/core/private_key.pem
+      - type: bind
+        source: /data/secret/keys/secretkey
+        target: /etc/core/key
+      - type: bind
+        source: ./shared/trust-certificates
+        target: /harbor_cust_cert
+    networks:
+      harbor:
+      harbor-chartmuseum:
+        aliases:
+          - harbor-core
+    dns_search: .
+    dns:
+$tmpstr
+    extra_hosts:
+      - 'redis:{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }}{{ end }}'
+      - 'postgresql:{{ range getvs "/hosts/db_node/*/ip" }}{{ . }}{{ end }}'
+      {{- if eq $nodeRole "web" }}
+            {{- range getvs "/hosts/job_node/*/ip" }}
+      - 'jobservice:{{ . }}'
+              {{- if eq (getv "/env/trivy.enabled" "true") "true" }}
+      - 'trivy-adapter:{{ . }}'
+              {{- end }}
+            {{- end }}
+      {{- end }}
+    depends_on:
+      - registry
+    logging:
+      driver: "syslog"
+      options:
+        syslog-address: "tcp://log:1514"
+        tag: "{{ $nodeRole }}.core"
+  chartmuseum:
+    container_name: chartmuseum
+    image: goharbor/chartmuseum-photon:\$HARBOR_VERSION
+    restart: always
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - SETGID
+      - SETUID
+    networks:
+      - harbor-chartmuseum
+    dns_search: .
+    dns:
+$tmpstr
+    extra_hosts:
+      - "redis:{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }}{{ end }}"
+    volumes:
+      {{- if len (ls "/hosts/storage_node") }}
+      - dataDir:/chart_storage:z
+      {{- end }}
+      - ./chartserver:/etc/chartserver:z
+      - type: bind
+        source: ./shared/trust-certificates
+        target: /harbor_cust_cert
+    logging:
+      driver: "syslog"
+      options:
+        syslog-address: "tcp://log:1514"
+        tag: "{{ $nodeRole }}.chartmuseum"
+    env_file:
+      ./chartserver/env
+  {{- end }}
+  {{- if eq $nodeRole "job" }}
+    {{- if eq (getv "/env/trivy.enabled" "true") "true" }}
+  trivy-adapter:
+    container_name: trivy-adapter
+    image: goharbor/trivy-adapter-photon:\$HARBOR_VERSION
+    restart: always
+    healthcheck:
+      test: curl --fail -s http://127.0.0.1:8081/probe/healthy || curl -k --fail -s https://127.0.0.1:8443/probe/healthy || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    cap_drop:
+      - ALL
+    dns_search: .
+    dns:
+$tmpstr
+    extra_hosts:
+      - "redis:{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }}{{ end }}"
+    networks:
+      - harbor
+    ports:
+      - 8081:8081
+    volumes:
+      - trivyDataTrivy:/home/scanner/.cache/trivy
+      - trivyDataReports:/home/scanner/.cache/reports
+      - type: bind
+        source: ./shared/trust-certificates
+        target: /harbor_cust_cert
+    logging:
+      driver: "syslog"
+      options:
+        syslog-address: "tcp://log:1514"
+        tag: "job.trivy-adapter"
+    env_file:
+      ./trivy-adapter/env
+    {{- end }}
+  jobservice:
+    image: goharbor/harbor-jobservice:\$HARBOR_VERSION
+    container_name: harbor-jobservice
+    env_file:
+      - ./jobservice/env
+    restart: always
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+    volumes:
+      - jobLogs:/var/log/jobs:z
+      - type: bind
+        source: ./jobservice/config.yml
+        target: /etc/jobservice/config.yml
+      - type: bind
+        source: ./shared/trust-certificates
+        target: /harbor_cust_cert
+    networks:
+      - harbor
+    ports:
+      - 8080:8080
+    dns_search: .
+    dns:
+$tmpstr
+    extra_hosts:
+      - "redis:{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }}{{ end }}"
+      - "postgresql:{{ range getvs "/hosts/db_node/*/ip" }}{{ . }}{{ end }}"
+    depends_on:
+      - core
+    logging:
+      driver: "syslog"
+      options:
+        syslog-address: "tcp://log:1514"
+        tag: "job.jobservice"
+  {{- end }}
+  {{- if eq $nodeRole "web" }}
+  portal:
+    image: goharbor/harbor-portal:\$HARBOR_VERSION
+    container_name: harbor-portal
+    restart: always
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+      - NET_BIND_SERVICE
+    volumes:
+      - type: bind
+        source: ./portal/nginx.conf
+        target: /etc/nginx/nginx.conf
+    networks:
+      - harbor
+    dns_search: .
+    dns:
+$tmpstr
+    logging:
+      driver: "syslog"
+      options:
+        syslog-address: "tcp://log:1514"
+        tag: "web.portal"
+  proxy:
+    image: goharbor/nginx-photon:\$HARBOR_VERSION
+    container_name: nginx
+    restart: always
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+      - NET_BIND_SERVICE
+    volumes:
+      - ./nginx:/etc/nginx:z
+      - type: bind
+        source: ./shared/trust-certificates
+        target: /harbor_cust_cert
+    networks:
+      - harbor
+    dns_search: .
+    dns:
+$tmpstr
+    ports:
+      - 80:8080
+    depends_on:
+      - registry
+      - core
+      - portal
+    logging:
+      driver: "syslog"
+      options:
+        syslog-address: "tcp://log:1514"
+        tag: "web.proxy"
+  {{- end }}
+networks:
+  harbor:
+    external: false
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.18.0.0/16
+  harbor-chartmuseum:
+    external: false
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.19.0.0/16
+{{- range getvs "/host/role" | filter "web|job" }}
+volumes:
+  dataDir:
+    driver: local
+    driver_opts:
+  {{- if len (ls "/hosts/storage_node") }}
+      type: nfs4
+      o: addr={{ range getvs "/hosts/storage_node/*/ip" }}{{ . }}{{ end }},rw
+      device: ":/data/registry"
+  {{- else }}
+      type: none
+      device: /data/registry
+      o: bind
+  {{- end }}
+  {{- if eq $nodeRole "job" }}
+  jobLogs:
+    driver: local
+    driver_opts:
+      type: nfs4
+      o: addr={{ range getvs "/hosts/log_node/*/ip" }}{{ . }}{{ end }},rw
+      device: ":/var/log/harbor/job-logs"
+  trivyDataTrivy:
+    driver: local
+    driver_opts:
+      type: nfs4
+      o: addr={{ range getvs "/hosts/log_node/*/ip" }}{{ . }}{{ end }},rw
+      device: ":/var/log/harbor/trivy-data/trivy"
+  trivyDataReports:
+    driver: local
+    driver_opts:
+      type: nfs4
+      o: addr={{ range getvs "/hosts/log_node/*/ip" }}{{ . }}{{ end }},rw
+      device: ":/var/log/harbor/trivy-data/reports"
+  {{- end }}
+{{- end }}
+DOCKER_COMPOSE_FILE
+
