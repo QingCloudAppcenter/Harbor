@@ -41,6 +41,9 @@ $tmpstr
     image: goharbor/redis-photon:\$HARBOR_VERSION
     container_name: redis
     restart: always
+    command: redis-server /etc/redis/redis.conf
+    healthcheck:
+      test: netstat -ltun | grep 6379
     cap_drop:
       - ALL
     cap_add:
@@ -49,6 +52,7 @@ $tmpstr
       - SETUID
     volumes:
       - /data/redis:/var/lib/redis
+      - ./redis.conf:/etc/redis/redis.conf
     networks:
       - harbor
     ports:
