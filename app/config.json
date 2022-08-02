@@ -490,6 +490,14 @@
       "changeable": true,
       "default": false,
       "required": "no"
+    },{
+      "key": "QS_CHUNK_SIZE",
+      "label": "QS_CHUNK_SIZE",
+      "description": "The default part size for multipart uploads to S3",
+      "type": "integer",
+      "changeable": true,
+      "default": 67108864,
+      "required": "yes"
     }, {
       "key": "trivy.enabled",
       "label": "Enable trivy plugin",

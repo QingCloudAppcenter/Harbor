@@ -30,6 +30,7 @@ storage:
     {{- end }}
     bucket: {{ getv "/env/QS_BUCKET" }}
     rootdirectory: {{ getv "/env/QS_ROOT_DIRECTORY" "" }}
+    chunksize: {{ getv "/env/QS_CHUNK_SIZE" }}
   {{- end }}
   maintenance:
     uploadpurging:
@@ -41,7 +42,7 @@ redis:
   readtimeout: 10s
   writetimeout: 10s
   dialtimeout: 10s
-  password:
+  password: $redisPassword
   db: 1
 http:
   addr: :5000
