@@ -497,7 +497,14 @@
       "type": "integer",
       "changeable": true,
       "default": 67108864,
-      "required": "yes"
+      "required": "yes",
+      "range":[
+        8388608,
+        16777216,
+        33554432,
+        67108864,
+        134217728
+      ]
     }, {
       "key": "trivy.enabled",
       "label": "Enable trivy plugin",
