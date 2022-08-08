@@ -1,0 +1,69 @@
+{{- range getvs "/host/role" | filter "web|job" }}
+encrypted=$(echo -n {{ getv "/cluster/user_id" }}{{ getv "/cluster/global_uuid" }} | sha256sum | base64)
+redisPassword=${encrypted:0:16}
+
+flush > /opt/app/current/conf/jobservice/config.yml << JOB_SERVICE_CONFIG
+---
+#Protocol used to serve
+protocol: "http"
+
+#Server listening port
+port: 8080
+
+#Worker pool
+worker_pool:
+  #Worker concurrency
+  workers: 10
+  backend: "redis"
+  #Additional config if use 'redis' backend
+  redis_pool:
+    #redis://[arbitrary_username:password@]ipaddress:port/database_index
+    redis_url: redis://redis:$redisPassword@redis:6379/2?idle_timeout_seconds=30
+    namespace: "harbor_job_service_namespace"
+    idle_timeout_second: 3600
+#Loggers for the running job
+job_loggers:
+  - name: "STD_OUTPUT" # logger backend name, only support "FILE" and "STD_OUTPUT"
+    level: "INFO" # INFO/DEBUG/WARNING/ERROR/FATAL
+  - name: "FILE"
+    level: "INFO"
+    settings: # Customized settings of logger
+      base_dir: "/var/log/jobs"
+    sweeper:
+      duration: 1 #days
+      settings: # Customized settings of sweeper
+        work_dir: "/var/log/jobs"
+
+#Loggers for the job service
+loggers:
+  - name: "STD_OUTPUT" # Same with above
+    level: "INFO"
+JOB_SERVICE_CONFIG
+{{- end }}
+
+{{- range getvs "/host/role" }}
+encrypted=$(echo -n {{ getv "/cluster/user_id" }}{{ getv "/cluster/global_uuid" }} | sha256sum | base64)
+redisPassword=${encrypted:0:16}
+
+flush > /opt/app/current/conf/trivy-adapter/env << ENV_FILE
+SCANNER_LOG_LEVEL=info
+SCANNER_API_SERVER_ADDR=:8081
+SCANNER_REDIS_URL=redis://redis:$redisPassword@redis:6379/5?idle_timeout_seconds=30
+SCANNER_STORE_REDIS_URL=redis://redis:$redisPassword@redis:6379/5?idle_timeout_seconds=30
+SCANNER_STORE_REDIS_NAMESPACE=harbor.scanner.trivy:store
+SCANNER_JOB_QUEUE_REDIS_URL=redis://redis:$redisPassword@redis:6379/5?idle_timeout_seconds=30
+SCANNER_JOB_QUEUE_REDIS_NAMESPACE=harbor.scanner.trivy:job-queue
+SCANNER_TRIVY_CACHE_DIR=/home/scanner/.cache/trivy
+SCANNER_TRIVY_REPORTS_DIR=/home/scanner/.cache/reports
+SCANNER_TRIVY_VULN_TYPE=os,library
+SCANNER_TRIVY_SEVERITY=UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+SCANNER_TRIVY_IGNORE_UNFIXED=False
+SCANNER_TRIVY_SKIP_UPDATE=False
+SCANNER_TRIVY_GITHUB_TOKEN=
+SCANNER_TRIVY_INSECURE=False
+HTTP_PROXY=
+HTTPS_PROXY=
+NO_PROXY=log,127.0.0.1,core,exporter,postgresql,.internal,db,portal,.local,registry,notary-server,chartmuseum,notary-signer,trivy-adapter,redis,jobservice,registryctl,localhost,nginx
+ENV_FILE
+
+{{- end }}

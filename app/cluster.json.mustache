@@ -2,7 +2,7 @@
   "name": {{cluster.name}},
   "description": {{cluster.description}},
   "upgrade_policy": [
-    
+    "appv-cl8323yd"
   ],
   "vxnet": {{cluster.vxnet}},
   "nodes": [{
@@ -40,10 +40,6 @@
         "order": 1,
         "cmd": "appctl restart"
       },
-      "upgrade": {
-        "order": 1,
-        "cmd": "appctl upgrade"
-      }, 
       "cleanJobLogs": {
         "type": "custom",
         "cmd": "appctl cleanJobLogs",
@@ -92,10 +88,6 @@
       "restart": {
         "order": 2,
         "cmd": "appctl restart"
-      },
-      "upgrade": {
-        "order": 2,
-        "cmd": "appctl upgrade"
       }
     }
   }, {
@@ -133,11 +125,6 @@
         "order": 2,
         "cmd": "appctl restart"
       },
-      "upgrade": {
-        "order": 2,
-        "cmd": "appctl upgrade",
-        "timeout": 86400
-      },
       "resetAdminPwd": {
         "type": "custom",
         "cmd": "appctl resetAdminPwd",
@@ -174,10 +161,6 @@
       "restart": {
         "order": 2,
         "cmd": "appctl restart"
-      },
-      "upgrade": {
-        "order": 2,
-        "cmd": "appctl upgrade"
       }
     }
   }, {
@@ -209,10 +192,6 @@
       "restart": {
         "order": 3,
         "cmd": "appctl restart"
-      },
-      "upgrade": {
-        "order": 3,
-        "cmd": "appctl upgrade"
       }
     },
     "env": {
@@ -223,6 +202,7 @@
       "QS_ZONE": {{env.QS_ZONE}},
       "QS_URL": {{env.QS_URL}},
       "s3.url.used": {{env.s3.url.used}},
+      "QS_CHUNK_SIZE": {{env.QS_CHUNK_SIZE}},
       "QS_ROOT_DIRECTORY": {{env.QS_ROOT_DIRECTORY}},
       "trivy.enabled": {{env.trivy.enabled}}
     }
@@ -254,10 +234,6 @@
       "restart": {
         "order": 4,
         "cmd": "appctl restart"
-      },
-      "upgrade": {
-        "order": 4,
-        "cmd": "appctl upgrade"
       }
     },
     "env": {
@@ -268,6 +244,7 @@
       "QS_ZONE": {{env.QS_ZONE}},
       "QS_URL": {{env.QS_URL}},
       "s3.url.used": {{env.s3.url.used}},
+      "QS_CHUNK_SIZE": {{env.QS_CHUNK_SIZE}},
       "QS_ROOT_DIRECTORY": {{env.QS_ROOT_DIRECTORY}},
       "trivy.enabled": {{env.trivy.enabled}}
     }
