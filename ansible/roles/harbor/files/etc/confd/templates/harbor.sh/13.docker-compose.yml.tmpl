@@ -34,7 +34,7 @@ $tmpstr
     logging:
       driver: "syslog"
       options:
-        tag: "harbor.log"
+        tag: "harborLogSelf.log"
   {{- end }}
   {{- if eq $nodeRole "cache" }}
   redis:
@@ -94,6 +94,7 @@ $tmpstr
       options:
         syslog-address: "tcp://log:1514"
         tag: "db.postgresql"
+    shm_size: '1gb'
   {{- end }}
   {{- range getvs "/host/role" | filter "web|job" }}
   registry:
@@ -281,6 +282,33 @@ $tmpstr
     env_file:
       ./trivy-adapter/env
     {{- end }}
+  exporter:
+    image: goharbor/harbor-exporter:\$HARBOR_VERSION
+    container_name: harbor-exporter
+    env_file:
+      - ./exporter/env
+    restart: always
+    networks:
+      - harbor
+    depends_on:
+      - core
+    volumes:
+      - type: bind
+        source: ./shared/trust-certificates
+        target: /harbor_cust_cert
+    ports:
+      - 9090:9090
+    dns_search: .
+    dns:
+$tmpstr
+    logging:
+      driver: "syslog"
+      options:
+        syslog-address: "tcp://log:1514"
+        tag: "exporter"
+    extra_hosts:
+      - "postgresql:{{ range getvs "/hosts/db_node/*/ip" }}{{ . }}{{ end }}"
+      - "redis:{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }}{{ end }}"
   jobservice:
     image: goharbor/harbor-jobservice:\$HARBOR_VERSION
     container_name: harbor-jobservice
@@ -303,6 +331,8 @@ $tmpstr
         target: /harbor_cust_cert
     networks:
       - harbor
+    depends_on:
+      - core
     ports:
       - 8080:8080
     dns_search: .
@@ -311,8 +341,6 @@ $tmpstr
     extra_hosts:
       - "redis:{{ range getvs "/hosts/cache_node/*/ip" }}{{ . }}{{ end }}"
       - "postgresql:{{ range getvs "/hosts/db_node/*/ip" }}{{ . }}{{ end }}"
-    depends_on:
-      - core
     logging:
       driver: "syslog"
       options:
@@ -368,6 +396,7 @@ $tmpstr
 $tmpstr
     ports:
       - 80:8080
+      - 9090:9090
     depends_on:
       - registry
       - core
@@ -377,6 +406,9 @@ $tmpstr
       options:
         syslog-address: "tcp://log:1514"
         tag: "web.proxy"
+    extra_hosts:
+      - "jobservice:{{ range getvs "/hosts/job_node/*/ip" }}{{ . }}{{ end }}"
+      - "exporter:{{ range getvs "/hosts/job_node/*/ip" }}{{ . }}{{ end }}"
   {{- end }}
 networks:
   harbor:

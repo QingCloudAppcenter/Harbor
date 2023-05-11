@@ -18,7 +18,7 @@ worker_pool:
   #Additional config if use 'redis' backend
   redis_pool:
     #redis://[arbitrary_username:password@]ipaddress:port/database_index
-    redis_url: redis://redis:$redisPassword@redis:6379/2?idle_timeout_seconds=30
+    redis_url: redis://:$redisPassword@redis:6379/2?idle_timeout_seconds=30
     namespace: "harbor_job_service_namespace"
     idle_timeout_second: 3600
 #Loggers for the running job
@@ -48,10 +48,10 @@ redisPassword=${encrypted:0:16}
 flush > /opt/app/current/conf/trivy-adapter/env << ENV_FILE
 SCANNER_LOG_LEVEL=info
 SCANNER_API_SERVER_ADDR=:8081
-SCANNER_REDIS_URL=redis://redis:$redisPassword@redis:6379/5?idle_timeout_seconds=30
-SCANNER_STORE_REDIS_URL=redis://redis:$redisPassword@redis:6379/5?idle_timeout_seconds=30
+SCANNER_REDIS_URL=redis://:$redisPassword@redis:6379/5?idle_timeout_seconds=30
+SCANNER_STORE_REDIS_URL=redis://:$redisPassword@redis:6379/5?idle_timeout_seconds=30
 SCANNER_STORE_REDIS_NAMESPACE=harbor.scanner.trivy:store
-SCANNER_JOB_QUEUE_REDIS_URL=redis://redis:$redisPassword@redis:6379/5?idle_timeout_seconds=30
+SCANNER_JOB_QUEUE_REDIS_URL=redis://:$redisPassword@redis:6379/5?idle_timeout_seconds=30
 SCANNER_JOB_QUEUE_REDIS_NAMESPACE=harbor.scanner.trivy:job-queue
 SCANNER_TRIVY_CACHE_DIR=/home/scanner/.cache/trivy
 SCANNER_TRIVY_REPORTS_DIR=/home/scanner/.cache/reports

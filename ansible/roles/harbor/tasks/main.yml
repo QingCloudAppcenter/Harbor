@@ -1,10 +1,10 @@
 ---
 - name: set vars
   set_fact:
-    harbor_version: v2.2.1
-    containerd_version: 1.4.4-1
-    docker_version: 20.10.6~3
-    docker_compose_version: 1.29.2
+    harbor_version: v2.4.3
+    containerd_version: 1.4.6-1
+    docker_version: 20.10.7~3
+    docker_compose_version: 2.1.1
 
 - name: install app-agent
   include_role:
