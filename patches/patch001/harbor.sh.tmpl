@@ -167,10 +167,10 @@ xsrfKey=${encrypted:0:32}
 flush > /opt/app/current/conf/core/env << CORE_ENV_FILE
 CONFIG_PATH=/etc/core/app.conf
 UAA_CA_ROOT=/etc/core/certificates/uaa_ca.pem
-_REDIS_URL_CORE=redis://redis:$redisPassword@redis:6379?idle_timeout_seconds=30
+_REDIS_URL_CORE=redis://:$redisPassword@redis:6379?idle_timeout_seconds=30
 SYNC_QUOTA=true
 CHART_CACHE_DRIVER=redis
-_REDIS_URL_REG=redis://redis:$redisPassword@redis:6379?idle_timeout_seconds=30
+_REDIS_URL_REG=redis://:$redisPassword@redis:6379?idle_timeout_seconds=30
 
 LOG_LEVEL=info
 EXT_ENDPOINT={{ getv "/env/HARBOR_HOST" }}

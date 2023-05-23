@@ -1,3 +1,9 @@
+{{- if eq $nodeRole "job" }}
+
+encrypted=$(echo -n {{ getv "/cluster/user_id" }}{{ getv "/cluster/global_uuid" }} | sha256sum | base64)
+redisPassword=${encrypted:0:16}
+
+flush > /opt/app/current/conf/jobservice/config.yml << JOBSERVICE_ENV_FILE
 ---
 #Protocol used to serve
 protocol: "http"
@@ -13,7 +19,7 @@ worker_pool:
   #Additional config if use 'redis' backend
   redis_pool:
     #redis://[arbitrary_username:password@]ipaddress:port/database_index
-    redis_url: redis://redis:6379/2?idle_timeout_seconds=30
+    redis_url: redis://:$redisPassword@redis:6379?idle_timeout_seconds=30
     namespace: "harbor_job_service_namespace"
     idle_timeout_second: 3600
 #Loggers for the running job
@@ -33,3 +39,13 @@ job_loggers:
 loggers:
   - name: "STD_OUTPUT" # Same with above
     level: "INFO"
+
+metric:
+  enabled: true
+  path: /metrics
+  port: 9090
+
+JOBSERVICE_ENV_FILE
+chown 10000:10000 /opt/app/current/conf/jobservice/config.yml
+
+{{- end }}

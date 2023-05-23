@@ -7,7 +7,7 @@ EC_CHECK_HEALTH=6
 EC_RETRY_FAILED=5 # retry: failed several times
 EC_UPGRADE_DB_NO_MOUNT=10 # upgrade failure: no DB data directory mount
 EC_UPGRADE_DISK_SPACE=11 # upgrade failure: no enough disk space (>33%)
-EC_UPGRADE_DB_DIR_EXISTS=12 # upgrade failure: DB data directory is not empty
+EC_UPGRADE_DB_DIR_NOT_EXISTS=12 # upgrade failure: DB data directory is not empty
 EC_UPGRADE_DB_NO_DIR=13 # upgrade failure: no DB data directory mount
 EC_UPGRADE_TO_130=20 # upgrade failure: DB migration to Harbor v1.3.0
 EC_UPGRADE_TO_160=21 # upgrade failure: DB migration to Harbor v1.6.0
@@ -26,6 +26,7 @@ dockerCompose() {
   docker-compose --env-file /opt/app/current/bin/envs/harbor.env -f /opt/app/current/conf/docker-compose.yml $@
 }
 
+oldVersion=harbor-v2.2.1
 serverMountPath=/data/registry
 dbMountDir=/data/database
 dbDataDir=$dbMountDir/harbor-$HARBOR_VERSION
@@ -107,38 +108,24 @@ checkContainerHealthy() {
 }
 
 duplicateDb() {
-  [ -d "$dbDataDir" ] && return $EC_UPGRADE_DB_DIR_EXISTS || echo Duplicating DB data directory.
   rm -rf $dbMountDir/lost+found
-  local files=$(ls $dbMountDir)
-  mkdir -p $dbDataDir
-  for file in $files; do
-    cp -r "$dbMountDir/$file" "$dbDataDir/$file"
-  done
+  mkdir -p $dbMountDir/harbor-v2.4.3
+  mkdir -p $dbMountDir/back_up
+  cp -r $dbMountDir/$oldVersion/* $dbMountDir/back_up/
+  cp -r $dbMountDir/$oldVersion/* $dbMountDir/harbor-v2.4.3/
+  chmod 700 $dbMountDir/harbor-v2.4.3/
+  chown -R 999.999 $dbMountDir/harbor-v2.4.3/
 }
 
 revertDb() {
   rm -rf $dbDataDir
 }
 
-migrateDb() {
-  # Migrating to v1.3.0 ...
-  echo -n "y" | docker run -i --rm -e DB_USR=root -e DB_PWD=root123 -v $dbDataDir:/var/lib/mysql vmware/harbor-db-migrator:1.3 up head || return $EC_UPGRADE_TO_130
-
-  # Migrating to v1.6.0 ...
-  echo -n "y" | docker run -i --rm -e DB_USR=root -e DB_PWD=root123 -v $dbDataDir:/var/lib/mysql goharbor/harbor-migrator:v1.6.0 --db up || return $EC_UPGRADE_TO_160
-
-  # Replace default password with the generated stronger one for super user
-  docker run --rm -di --name update-passwd --env-file=/opt/app/conf/db/env -v $dbDataDir:/var/lib/postgresql/data goharbor/harbor-db:$HARBOR_VERSION || return $EC_UPDATE_DB_PWD_INIT
-  retry 30 2 0 checkContainerHealthy update-passwd || return $EC_UPDATE_DB_PWD_START
-  docker exec -i update-passwd sh -c "psql -U postgres -c \"alter user postgres with password '\$POSTGRES_PASSWORD'\"" || return $EC_UPDATE_DB_PWD_RUN
-  docker stop update-passwd || return $EC_UPDATE_DB_PWD_STOP
-}
-
 upgrade() {
   if [ "$MY_ROLE" = "db" ]; then
     [ -d $dbMountDir ] || return $EC_UPGRADE_DB_NO_DIR
 
-    if [ -f "$dbMountDir/ibdata1" ]; then
+    if [ -d "$dbMountDir/$oldVersion" ]; then
       echo About to upgrade. Checking volume usage ...
       used=$(df --output=pcent $dbMountDir | tail -1 | tr -d '%')
       [ $used -lt 33 ] || {
@@ -148,18 +135,6 @@ upgrade() {
 
       echo Duplicating DB data ...
       duplicateDb
-
-      echo Migrating DB data ...
-      migrateDb || {
-        retcode=$?
-        revertDb
-        return $retcode
-      }
-
-      local oldFiles=`realpath $dbMountDir/*`
-      for oldFile in $oldFiles; do
-        [ "$oldFile" = "$dbDataDir" ] || rm -rf "$oldFile"
-      done
 
     else
       [ -d "$dbDataDir" ] || return $EC_UPGRADE_DB_NO_DIR
