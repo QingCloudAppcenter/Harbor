@@ -26,7 +26,7 @@ dockerCompose() {
   docker-compose --env-file /opt/app/current/bin/envs/harbor.env -f /opt/app/current/conf/docker-compose.yml $@
 }
 
-oldVersion=harbor-v2.2.1
+oldVersion=harbor-v2.4.3
 serverMountPath=/data/registry
 dbMountDir=/data/database
 dbDataDir=$dbMountDir/harbor-$HARBOR_VERSION
@@ -109,12 +109,12 @@ checkContainerHealthy() {
 
 duplicateDb() {
   rm -rf $dbMountDir/lost+found
-  mkdir -p $dbMountDir/harbor-v2.4.3
-  mkdir -p $dbMountDir/back_up
-  cp -r $dbMountDir/$oldVersion/* $dbMountDir/back_up/
-  cp -r $dbMountDir/$oldVersion/* $dbMountDir/harbor-v2.4.3/
-  chmod 700 $dbMountDir/harbor-v2.4.3/
-  chown -R 999.999 $dbMountDir/harbor-v2.4.3/
+  mkdir -p $dbMountDir/harbor-v2.6.4
+  mkdir -p $dbMountDir/back_up_v2.6.4
+  cp -r $dbMountDir/$oldVersion/* $dbMountDir/back_up_v2.6.4/
+  cp -r $dbMountDir/$oldVersion/* $dbMountDir/harbor-v2.6.4/
+  chmod 700 $dbMountDir/harbor-v2.6.4/
+  chown -R 999.999 $dbMountDir/harbor-v2.6.4/
 }
 
 revertDb() {
