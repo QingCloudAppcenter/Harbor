@@ -85,10 +85,10 @@
         "label": "Instance Class",
         "description": "",
         "type": "integer",
-        "default": 0,
+        "default": 101,
         "range": [
-          0,
-          1
+          101,
+          203
         ],
         "required": "yes"
       }]
@@ -128,10 +128,10 @@
         "label": "Instance Class",
         "description": "",
         "type": "integer",
-        "default": 0,
+        "default": 101,
         "range": [
-          0,
-          1
+          101,
+          203
         ],
         "required": "yes"
       }, {
@@ -139,10 +139,10 @@
         "label": "Volume Class",
         "description": "The volume type for each instance,such as high performance,high performance plus",
         "type": "integer",
-        "default": 0,
+        "default": 100,
         "range": [
-          0,
-          3
+          100,
+          200
         ],
         "required": "yes"
       }, {
@@ -190,10 +190,10 @@
         "label": "Instance Class",
         "description": "",
         "type": "integer",
-        "default": 0,
+        "default": 101,
         "range": [
-          0,
-          1
+          101,
+          203
         ],
         "required": "yes"
       }]
@@ -246,10 +246,10 @@
         "label": "Instance Class",
         "description": "",
         "type": "integer",
-        "default": 1,
+        "default": 101,
         "range": [
-          0,
-          1
+          101,
+          203
         ],
         "required": "yes"
       }, {
@@ -259,9 +259,8 @@
         "type": "integer",
         "default": 2,
         "range": [
-          0,
-          2,
-          3,
+          100,
+          200,
           5,
           6
         ],
@@ -323,10 +322,10 @@
         "label": "Instance Class",
         "description": "",
         "type": "integer",
-        "default": 0,
+        "default": 101,
         "range": [
-          0,
-          1
+          101,
+          203
         ],
         "required": "yes"
       }]
@@ -366,10 +365,10 @@
         "label": "Instance Class",
         "description": "",
         "type": "integer",
-        "default": 0,
+        "default": 101,
         "range": [
-          0,
-          1
+          101,
+          203
         ],
         "required": "yes"
       }, {
@@ -377,10 +376,10 @@
         "label": "Volume Class",
         "description": "The volume type for each instance,such as high performance,high performance plus",
         "type": "integer",
-        "default": 0,
+        "default": 100,
         "range": [
-          0,
-          3
+          100,
+          200
         ],
         "required": "yes"
       }, {
